@@ -17,6 +17,7 @@ Added the following testing dependencies to all microservice `pom.xml` files:
 - product-service
 - media-service
 - api-gateway
+- service-registry
 
 ### 2. **Test Directory Structure Created**
 Organized test files following Maven best practices:
@@ -75,10 +76,14 @@ src/test/java/ax/gritlab/buy_01/[service]/
   - `testNonExistentRoute()` - Handle 404 responses
   - `testActuatorEndpoint()` - Verify actuator availability
 
+#### **Service Registry Tests** (1 test)
+- **ServiceRegistryApplicationTest.java**
+  - `contextLoads()` - Verify Eureka server startup
+
 ## 📊 Test Results
 ```
-Total Tests Run: 33
-✅ Passed: 33
+Total Tests Run: 34
+✅ Passed: 34
 ❌ Failed: 0
 ⏭️  Skipped: 0
 
