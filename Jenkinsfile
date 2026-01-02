@@ -8,6 +8,8 @@ pipeline {
         TEAM_EMAIL = 'othmane.afilali@gritlab.ax,jedi.reston@gritlab.ax'
         EMAIL_JEDI = 'jedi.reston@gritlab.ax'
         EMAIL_OZZY = 'othmane.afilali@gritlab.ax'
+        NODEJS_HOME = tool 'NodeJS'
+        PATH = "${NODEJS_HOME}/bin:${env.PATH}"
     }
 
     stages {
