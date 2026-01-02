@@ -155,46 +155,26 @@ environment {
                             scp -i ${EC2_KEY} -o StrictHostKeyChecking=no -r \
                                 certs ${EC2_USER}@${EC2_HOST}:/home/ec2-user/
                             
-                            # SSH into EC2 and deploy
-                            ssh -i ${EC2_KEY} -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} "bash -s" << 'EOFBASH'
-cd /home/ec2-user
-
-# Install Docker Compose if not already installed
-if ! command -v docker-compose &> /dev/null; then
-    echo "Installing Docker Compose..."
-    sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-\$(uname -s)-\$(uname -m)" -o /usr/local/bin/docker-compose
-    sudo chmod +x /usr/local/bin/docker-compose
-    docker-compose --version
-fi
-
-# Configure AWS credentials from environment or use instance role
-if [ -z "\$AWS_ACCESS_KEY_ID" ]; then
-    echo "Using EC2 Instance Role for AWS credentials"
-else
-    export AWS_ACCESS_KEY_ID=\$AWS_ACCESS_KEY_ID
-    export AWS_SECRET_ACCESS_KEY=\$AWS_SECRET_ACCESS_KEY
-    export AWS_DEFAULT_REGION=eu-north-1
-fi
-
-# Login to ECR on the EC2 instance
-aws ecr get-login-password --region eu-north-1 | docker login --username AWS --password-stdin 240316737698.dkr.ecr.eu-north-1.amazonaws.com || echo "Warning: ECR login may fail without AWS credentials"
-
-# Pull latest images (continue even if some fail)
-docker-compose pull || echo "Some images may not have pulled successfully"
-
-# Stop and remove old containers
-docker-compose down || true
-
-# Start new services
-docker-compose up -d
-
-echo "✅ Deployment successful!"
-docker-compose ps
-EOFBASH
+                            # Install Docker Compose on EC2
+                            ssh -i ${EC2_KEY} -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} \\
+                                "if ! command -v docker-compose &> /dev/null; then \\
+                                    echo 'Installing Docker Compose...'; \\
+                                    sudo curl -L 'https://github.com/docker/compose/releases/latest/download/docker-compose-\$(uname -s)-\$(uname -m)' -o /usr/local/bin/docker-compose; \\
+                                    sudo chmod +x /usr/local/bin/docker-compose; \\
+                                    docker-compose --version; \\
+                                fi"
+                            
+                            # Deploy services on EC2
+                            ssh -i ${EC2_KEY} -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} \\
+                                "cd /home/ec2-user && \\
+                                docker-compose down || true && \\
+                                docker-compose up -d && \\
+                                echo '✅ Deployment successful!' && \\
+                                docker-compose ps"
                         """
                         
                         echo '✅ Application deployed successfully to EC2!'
-                        echo "📍 Access your application at: http://${EC2_HOST}:80"
+                        echo "📍 Access your application at: http://${EC2_HOST}:4200 (or :80 for HTTP)"
                         echo "🔗 API Gateway: http://${EC2_HOST}:8080"
                         
                         } catch (Exception e) {
