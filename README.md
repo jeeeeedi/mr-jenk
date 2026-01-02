@@ -1,4 +1,4 @@
-# Buy-01 E-Commerce Platform 🛒 (((edit for mr-jenk)))
+# Buy-01 E-Commerce Platform 🛒
 
 A production-ready, full-stack microservices-based e-commerce platform built with **Spring Boot** and **Angular**, featuring event-driven architecture with **Apache Kafka**, service discovery, and containerized deployment.
 
