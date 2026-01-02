@@ -99,13 +99,13 @@ environment {
                     try {
                         // Step 1: Login to AWS ECR
                         echo '📦 Logging in to AWS ECR...'
-                        sh '''
+                        sh """
                             aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
-                        '''
+                        """
                         
                         // Step 2: Build Docker images for each service
                         echo '🔨 Building Docker images...'
-                        sh '''
+                        sh """
                             # Build Java microservices (Spring Boot apps)
                             docker build -t ${ECR_REGISTRY}/service-registry:${BUILD_TAG} ./service-registry
                             docker build -t ${ECR_REGISTRY}/api-gateway:${BUILD_TAG} ./api-gateway
@@ -115,11 +115,11 @@ environment {
                             
                             # Build Angular frontend
                             docker build -t ${ECR_REGISTRY}/buy-01-ui:${BUILD_TAG} ./buy-01-ui
-                        '''
+                        """
                         
                         // Step 3: Push images to ECR
                         echo '⬆️  Pushing images to AWS ECR...'
-                        sh '''
+                        sh """
                             docker push ${ECR_REGISTRY}/service-registry:${BUILD_TAG}
                             docker push ${ECR_REGISTRY}/api-gateway:${BUILD_TAG}
                             docker push ${ECR_REGISTRY}/user-service:${BUILD_TAG}
@@ -141,11 +141,11 @@ environment {
                             docker push ${ECR_REGISTRY}/product-service:latest
                             docker push ${ECR_REGISTRY}/media-service:latest
                             docker push ${ECR_REGISTRY}/buy-01-ui:latest
-                        '''
+                        """
                         
                         // Step 4: Deploy to EC2 via SSH using docker-compose
-                        echo '🚀 Deploying to EC2 instance (${EC2_HOST})...'
-                        sh '''
+                        echo "🚀 Deploying to EC2 instance (${EC2_HOST})..."
+                        sh """
                             # Copy docker-compose.yml to EC2
                             scp -i ${EC2_KEY} -o StrictHostKeyChecking=no \
                                 docker-compose.yml ${EC2_USER}@${EC2_HOST}:/home/ec2-user/
@@ -169,7 +169,7 @@ environment {
                                 echo "✅ Deployment successful!"
                                 docker-compose ps
                             EOF
-                        '''
+                        """
                         
                         echo '✅ Application deployed successfully to EC2!'
                         echo "📍 Access your application at: http://${EC2_HOST}:80"
