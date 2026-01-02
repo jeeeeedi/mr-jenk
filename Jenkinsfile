@@ -93,7 +93,7 @@ environment {
                     def ECR_REGISTRY = '240316737698.dkr.ecr.eu-north-1.amazonaws.com'
                     def EC2_HOST = '13.50.231.161'
                     def EC2_USER = 'ec2-user'
-                    def EC2_KEY = System.getenv('HOME') + '/.jenkins/.ssh/mr-jenk-key.pem'
+                    def EC2_KEY = '${env.HOME}/.jenkins/.ssh/mr-jenk-key.pem'
                     def BUILD_TAG = "${BUILD_NUMBER}"
                     
                     try {
