@@ -156,6 +156,14 @@ environment {
                             ssh -i ${EC2_KEY} -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} << 'EOF'
                                 cd /home/ec2-user
                                 
+                                # Install Docker Compose if not already installed
+                                if ! command -v docker-compose &> /dev/null; then
+                                    echo "Installing Docker Compose..."
+                                    sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-\$(uname -s)-\$(uname -m)" -o /usr/local/bin/docker-compose
+                                    sudo chmod +x /usr/local/bin/docker-compose
+                                    docker-compose --version
+                                fi
+                                
                                 # Login to ECR on the EC2 instance
                                 aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
                                 
