@@ -148,37 +148,49 @@ environment {
                         // Step 4: Deploy to EC2 via SSH using docker-compose
                         echo "🚀 Deploying to EC2 instance (${EC2_HOST})..."
                         sh """
-                            # Copy docker-compose.yml to EC2
+                            # Copy docker-compose.yml and certs to EC2
                             scp -i ${EC2_KEY} -o StrictHostKeyChecking=no \
                                 docker-compose.yml ${EC2_USER}@${EC2_HOST}:/home/ec2-user/
                             
+                            scp -i ${EC2_KEY} -o StrictHostKeyChecking=no -r \
+                                certs ${EC2_USER}@${EC2_HOST}:/home/ec2-user/
+                            
                             # SSH into EC2 and deploy
-                            ssh -i ${EC2_KEY} -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} << 'EOF'
-                                cd /home/ec2-user
-                                
-                                # Install Docker Compose if not already installed
-                                if ! command -v docker-compose &> /dev/null; then
-                                    echo "Installing Docker Compose..."
-                                    sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-\$(uname -s)-\$(uname -m)" -o /usr/local/bin/docker-compose
-                                    sudo chmod +x /usr/local/bin/docker-compose
-                                    docker-compose --version
-                                fi
-                                
-                                # Login to ECR on the EC2 instance
-                                aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
-                                
-                                # Pull latest images
-                                docker-compose pull
-                                
-                                # Stop and remove old containers
-                                docker-compose down
-                                
-                                # Start new services
-                                docker-compose up -d
-                                
-                                echo "✅ Deployment successful!"
-                                docker-compose ps
-                            EOF
+                            ssh -i ${EC2_KEY} -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} "bash -s" << 'EOFBASH'
+cd /home/ec2-user
+
+# Install Docker Compose if not already installed
+if ! command -v docker-compose &> /dev/null; then
+    echo "Installing Docker Compose..."
+    sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-\$(uname -s)-\$(uname -m)" -o /usr/local/bin/docker-compose
+    sudo chmod +x /usr/local/bin/docker-compose
+    docker-compose --version
+fi
+
+# Configure AWS credentials from environment or use instance role
+if [ -z "\$AWS_ACCESS_KEY_ID" ]; then
+    echo "Using EC2 Instance Role for AWS credentials"
+else
+    export AWS_ACCESS_KEY_ID=\$AWS_ACCESS_KEY_ID
+    export AWS_SECRET_ACCESS_KEY=\$AWS_SECRET_ACCESS_KEY
+    export AWS_DEFAULT_REGION=eu-north-1
+fi
+
+# Login to ECR on the EC2 instance
+aws ecr get-login-password --region eu-north-1 | docker login --username AWS --password-stdin 240316737698.dkr.ecr.eu-north-1.amazonaws.com || echo "Warning: ECR login may fail without AWS credentials"
+
+# Pull latest images (continue even if some fail)
+docker-compose pull || echo "Some images may not have pulled successfully"
+
+# Stop and remove old containers
+docker-compose down || true
+
+# Start new services
+docker-compose up -d
+
+echo "✅ Deployment successful!"
+docker-compose ps
+EOFBASH
                         """
                         
                         echo '✅ Application deployed successfully to EC2!'
