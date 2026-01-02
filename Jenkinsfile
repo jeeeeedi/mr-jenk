@@ -88,20 +88,22 @@ environment {
             steps {
                 echo 'Deploying application to AWS EC2...'
                 
-                script {
-                    def AWS_REGION = 'eu-north-1'  // Change to your AWS region
-                    def ECR_REGISTRY = credentials('aws_account_id')  // Jenkins credential: 123456789.dkr.ecr.eu-north-1.amazonaws.com
-                    def EC2_HOST = credentials('ec2_ip_address')      // Jenkins credential: 13.50.231.161
-                    def EC2_USER = 'ec2-user'
-                    def EC2_KEY = credentials('ec2_ssh_key')          // Jenkins credential: /home/jenkins/.ssh/mr-jenk-key.pem
-                    def BUILD_TAG = "${BUILD_NUMBER}"
-                    
-                    try {
-                        // Step 1: Login to AWS ECR
-                        echo '📦 Logging in to AWS ECR...'
-                        sh """
-                            aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
-                        """
+                withCredentials([
+                    string(credentialsId: 'aws_account_id', variable: 'ECR_REGISTRY'),
+                    string(credentialsId: 'ec2_ip_address', variable: 'EC2_HOST'),
+                    file(credentialsId: 'ec2_ssh_key', variable: 'EC2_KEY')
+                ]) {
+                    script {
+                        def AWS_REGION = 'eu-north-1'
+                        def EC2_USER = 'ec2-user'
+                        def BUILD_TAG = "${BUILD_NUMBER}"
+                        
+                        try {
+                            // Step 1: Login to AWS ECR
+                            echo '📦 Logging in to AWS ECR...'
+                            sh """
+                                aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
+                            """
                         
                         // Step 2: Build Docker images for each service
                         echo '🔨 Building Docker images...'
@@ -179,6 +181,7 @@ environment {
                         echo "❌ Deployment failed: ${e.message}"
                         throw e
                     }
+                }
                 }
             }
         }
