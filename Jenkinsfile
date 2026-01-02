@@ -90,15 +90,13 @@ environment {
                 
                 script {
                     def AWS_REGION = 'eu-north-1'
+                    def ECR_REGISTRY = '240316737698.dkr.ecr.eu-north-1.amazonaws.com'
+                    def EC2_HOST = '13.50.231.161'
+                    def EC2_USER = 'ec2-user'
                     def BUILD_TAG = "${BUILD_NUMBER}"
                     
-                    withCredentials([
-                        string(credentialsId: 'aws_account_id', variable: 'ECR_REGISTRY'),
-                        string(credentialsId: 'ec2_ip_address', variable: 'EC2_HOST'),
-                        file(credentialsId: 'ec2_ssh_key', variable: 'EC2_KEY')
-                    ]) {
-                        def EC2_USER = 'ec2-user'
-                        
+                    // Get SSH key path from credentials
+                    withCredentials([file(credentialsId: 'ec2_ssh_key', variable: 'EC2_KEY')]) {
                         try {
                             // Step 1: Login to AWS ECR
                             echo '📦 Logging in to AWS ECR...'
@@ -175,8 +173,8 @@ environment {
                         """
                         
                         echo '✅ Application deployed successfully to EC2!'
-                        echo "📍 Access your application at: http://${ECR_HOST}:80"
-                        echo "🔗 API Gateway: http://${ECR_HOST}:8080"
+                        echo "📍 Access your application at: http://${EC2_HOST}:80"
+                        echo "🔗 API Gateway: http://${EC2_HOST}:8080"
                         
                         } catch (Exception e) {
                             echo "❌ Deployment failed: ${e.message}"
