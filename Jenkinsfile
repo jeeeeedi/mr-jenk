@@ -100,6 +100,8 @@ environment {
                         // Step 1: Login to AWS ECR
                         echo '📦 Logging in to AWS ECR...'
                         sh """
+                            mkdir -p ~/.docker
+                            echo '{"auths":{}}' > ~/.docker/config.json
                             aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
                         """
                         
