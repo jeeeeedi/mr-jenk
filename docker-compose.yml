@@ -46,7 +46,7 @@ services:
       - buy-01-network
 
   service-registry:
-    build: ./service-registry
+    image: 240316737698.dkr.ecr.eu-north-1.amazonaws.com/service-registry:latest
     container_name: buy-01-service-registry
     ports:
       - "8761:8761"
@@ -54,7 +54,7 @@ services:
       - buy-01-network
 
   api-gateway:
-    build: ./api-gateway
+    image: 240316737698.dkr.ecr.eu-north-1.amazonaws.com/api-gateway:latest
     container_name: buy-01-api-gateway
     ports:
       - "8080:8080"
@@ -70,7 +70,7 @@ services:
       - buy-01-network
 
   user-service:
-    build: ./user-service
+    image: 240316737698.dkr.ecr.eu-north-1.amazonaws.com/user-service:latest
     container_name: buy-01-user-service
     ports:
       - "8081:8081"
@@ -88,7 +88,7 @@ services:
       - buy-01-network
 
   product-service:
-    build: ./product-service
+    image: 240316737698.dkr.ecr.eu-north-1.amazonaws.com/product-service:latest
     container_name: buy-01-product-service
     ports:
       - "8082:8082"
@@ -107,7 +107,7 @@ services:
       - buy-01-network
 
   media-service:
-    build: ./media-service
+    image: 240316737698.dkr.ecr.eu-north-1.amazonaws.com/media-service:latest
     container_name: buy-01-media-service
     ports:
       - "8083:8083"
@@ -128,7 +128,7 @@ services:
       - buy-01-network
 
   frontend:
-    build: ./buy-01-ui
+    image: 240316737698.dkr.ecr.eu-north-1.amazonaws.com/buy-01-ui:latest
     container_name: buy-01-frontend
     ports:
       - "4201:443" # HTTPS (primary)
