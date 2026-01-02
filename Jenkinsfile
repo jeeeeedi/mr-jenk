@@ -85,10 +85,100 @@ environment {
         }
         stage('Deploy') {
             steps {
-                echo 'Deploying application...'
-                // Example deployment command
-                // sh './deploy.sh'
-                echo 'Simulating deployment to production environment...'
+                echo 'Deploying application to AWS EC2...'
+                
+                script {
+                    def AWS_REGION = 'eu-north-1'  // Change to your AWS region
+                    def ECR_REGISTRY = credentials('aws_account_id')  // Jenkins credential: 123456789.dkr.ecr.eu-north-1.amazonaws.com
+                    def EC2_HOST = credentials('ec2_ip_address')      // Jenkins credential: 13.50.231.161
+                    def EC2_USER = 'ec2-user'
+                    def EC2_KEY = credentials('ec2_ssh_key')          // Jenkins credential: /home/jenkins/.ssh/mr-jenk-key.pem
+                    def BUILD_TAG = "${BUILD_NUMBER}"
+                    
+                    try {
+                        // Step 1: Login to AWS ECR
+                        echo '📦 Logging in to AWS ECR...'
+                        sh '''
+                            aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
+                        '''
+                        
+                        // Step 2: Build Docker images for each service
+                        echo '🔨 Building Docker images...'
+                        sh '''
+                            # Build Java microservices (Spring Boot apps)
+                            docker build -t ${ECR_REGISTRY}/service-registry:${BUILD_TAG} ./service-registry
+                            docker build -t ${ECR_REGISTRY}/api-gateway:${BUILD_TAG} ./api-gateway
+                            docker build -t ${ECR_REGISTRY}/user-service:${BUILD_TAG} ./user-service
+                            docker build -t ${ECR_REGISTRY}/product-service:${BUILD_TAG} ./product-service
+                            docker build -t ${ECR_REGISTRY}/media-service:${BUILD_TAG} ./media-service
+                            
+                            # Build Angular frontend
+                            docker build -t ${ECR_REGISTRY}/buy-01-ui:${BUILD_TAG} ./buy-01-ui
+                        '''
+                        
+                        // Step 3: Push images to ECR
+                        echo '⬆️  Pushing images to AWS ECR...'
+                        sh '''
+                            docker push ${ECR_REGISTRY}/service-registry:${BUILD_TAG}
+                            docker push ${ECR_REGISTRY}/api-gateway:${BUILD_TAG}
+                            docker push ${ECR_REGISTRY}/user-service:${BUILD_TAG}
+                            docker push ${ECR_REGISTRY}/product-service:${BUILD_TAG}
+                            docker push ${ECR_REGISTRY}/media-service:${BUILD_TAG}
+                            docker push ${ECR_REGISTRY}/buy-01-ui:${BUILD_TAG}
+                            
+                            # Tag as 'latest' for easier reference
+                            docker tag ${ECR_REGISTRY}/service-registry:${BUILD_TAG} ${ECR_REGISTRY}/service-registry:latest
+                            docker tag ${ECR_REGISTRY}/api-gateway:${BUILD_TAG} ${ECR_REGISTRY}/api-gateway:latest
+                            docker tag ${ECR_REGISTRY}/user-service:${BUILD_TAG} ${ECR_REGISTRY}/user-service:latest
+                            docker tag ${ECR_REGISTRY}/product-service:${BUILD_TAG} ${ECR_REGISTRY}/product-service:latest
+                            docker tag ${ECR_REGISTRY}/media-service:${BUILD_TAG} ${ECR_REGISTRY}/media-service:latest
+                            docker tag ${ECR_REGISTRY}/buy-01-ui:${BUILD_TAG} ${ECR_REGISTRY}/buy-01-ui:latest
+                            
+                            docker push ${ECR_REGISTRY}/service-registry:latest
+                            docker push ${ECR_REGISTRY}/api-gateway:latest
+                            docker push ${ECR_REGISTRY}/user-service:latest
+                            docker push ${ECR_REGISTRY}/product-service:latest
+                            docker push ${ECR_REGISTRY}/media-service:latest
+                            docker push ${ECR_REGISTRY}/buy-01-ui:latest
+                        '''
+                        
+                        // Step 4: Deploy to EC2 via SSH using docker-compose
+                        echo '🚀 Deploying to EC2 instance (${EC2_HOST})...'
+                        sh '''
+                            # Copy docker-compose.yml to EC2
+                            scp -i ${EC2_KEY} -o StrictHostKeyChecking=no \
+                                docker-compose.yml ${EC2_USER}@${EC2_HOST}:/home/ec2-user/
+                            
+                            # SSH into EC2 and deploy
+                            ssh -i ${EC2_KEY} -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} << 'EOF'
+                                cd /home/ec2-user
+                                
+                                # Login to ECR on the EC2 instance
+                                aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
+                                
+                                # Pull latest images
+                                docker-compose pull
+                                
+                                # Stop and remove old containers
+                                docker-compose down
+                                
+                                # Start new services
+                                docker-compose up -d
+                                
+                                echo "✅ Deployment successful!"
+                                docker-compose ps
+                            EOF
+                        '''
+                        
+                        echo '✅ Application deployed successfully to EC2!'
+                        echo "📍 Access your application at: http://${EC2_HOST}:80"
+                        echo "🔗 API Gateway: http://${EC2_HOST}:8080"
+                        
+                    } catch (Exception e) {
+                        echo "❌ Deployment failed: ${e.message}"
+                        throw e
+                    }
+                }
             }
         }
     }
