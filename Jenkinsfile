@@ -168,6 +168,7 @@ environment {
                             ssh -i ${EC2_KEY} -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} \\
                                 "cd /home/ec2-user && \\
                                 docker-compose down || true && \\
+                                docker-compose pull || echo 'Warning: Some images may not have pulled (OK if already cached)' && \\
                                 docker-compose up -d && \\
                                 echo '✅ Deployment successful!' && \\
                                 docker-compose ps"
