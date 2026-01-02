@@ -2,15 +2,13 @@ pipeline {
     agent any
 
     environment {
-        MAVEN_HOME = tool 'Maven'
-        PATH = "${MAVEN_HOME}/bin:${env.PATH}"
-        // Email config
-        TEAM_EMAIL = 'othmane.afilali@gritlab.ax,jedi.reston@gritlab.ax'
-        EMAIL_JEDI = 'jedi.reston@gritlab.ax'
-        EMAIL_OZZY = 'othmane.afilali@gritlab.ax'
-        NODEJS_HOME = tool 'NodeJS'
-        PATH = "${NODEJS_HOME}/bin:${env.PATH}"
-    }
+    MAVEN_HOME = tool 'Maven'
+    NODEJS_HOME = tool 'NodeJS'
+    PATH = "${MAVEN_HOME}/bin:${NODEJS_HOME}/bin:${env.PATH}"
+    TEAM_EMAIL = 'othmane.afilali@gritlab.ax,jedi.reston@gritlab.ax'
+    EMAIL_JEDI = 'jedi.reston@gritlab.ax'
+    EMAIL_OZZY = 'othmane.afilali@gritlab.ax'
+}
 
     stages {
         stage('Checkout') {
