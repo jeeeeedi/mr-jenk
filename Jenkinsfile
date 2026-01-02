@@ -4,7 +4,8 @@ pipeline {
 environment {
     MAVEN_HOME = tool 'Maven'
     NODEJS_HOME = '/opt/homebrew/opt/node@20/bin'
-    PATH = "${MAVEN_HOME}/bin:${NODEJS_HOME}:${env.PATH}"
+    HOMEBREW_BIN = '/opt/homebrew/bin'
+    PATH = "${MAVEN_HOME}/bin:${NODEJS_HOME}:${HOMEBREW_BIN}:${env.PATH}"
 
     TEAM_EMAIL = 'othmane.afilali@gritlab.ax,jedi.reston@gritlab.ax'
     EMAIL_JEDI = 'jedi.reston@gritlab.ax'
