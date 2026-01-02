@@ -11,7 +11,7 @@ environment {
     EMAIL_OZZY = 'othmane.afilali@gritlab.ax'
 
     // Add this line for Karma/Angular tests
-    CHROME_BIN = '/usr/bin/google-chrome'
+    CHROME_BIN = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
 }
 
     stages {
