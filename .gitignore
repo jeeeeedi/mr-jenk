@@ -44,7 +44,6 @@ Thumbs.db
 
 # Uploads directory
 uploads/
-certs/
 
 # Node modules and frontend dependencies
 node_modules/
