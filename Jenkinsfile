@@ -88,15 +88,16 @@ environment {
             steps {
                 echo 'Deploying application to AWS EC2...'
                 
-                withCredentials([
-                    string(credentialsId: 'aws_account_id', variable: 'ECR_REGISTRY'),
-                    string(credentialsId: 'ec2_ip_address', variable: 'EC2_HOST'),
-                    file(credentialsId: 'ec2_ssh_key', variable: 'EC2_KEY')
-                ]) {
-                    script {
-                        def AWS_REGION = 'eu-north-1'
+                script {
+                    def AWS_REGION = 'eu-north-1'
+                    def BUILD_TAG = "${BUILD_NUMBER}"
+                    
+                    withCredentials([
+                        string(credentialsId: 'aws_account_id', variable: 'ECR_REGISTRY'),
+                        string(credentialsId: 'ec2_ip_address', variable: 'EC2_HOST'),
+                        file(credentialsId: 'ec2_ssh_key', variable: 'EC2_KEY')
+                    ]) {
                         def EC2_USER = 'ec2-user'
-                        def BUILD_TAG = "${BUILD_NUMBER}"
                         
                         try {
                             // Step 1: Login to AWS ECR
@@ -174,14 +175,14 @@ environment {
                         """
                         
                         echo '✅ Application deployed successfully to EC2!'
-                        echo "📍 Access your application at: http://${EC2_HOST}:80"
-                        echo "🔗 API Gateway: http://${EC2_HOST}:8080"
+                        echo "📍 Access your application at: http://${ECR_HOST}:80"
+                        echo "🔗 API Gateway: http://${ECR_HOST}:8080"
                         
-                    } catch (Exception e) {
-                        echo "❌ Deployment failed: ${e.message}"
-                        throw e
+                        } catch (Exception e) {
+                            echo "❌ Deployment failed: ${e.message}"
+                            throw e
+                        }
                     }
-                }
                 }
             }
         }
