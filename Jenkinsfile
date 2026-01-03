@@ -3,16 +3,16 @@ pipeline {
 
 environment {
     MAVEN_HOME = tool 'Maven'
-    NODEJS_HOME = '/opt/homebrew/opt/node@20/bin'
-    HOMEBREW_BIN = '/opt/homebrew/bin'
-    PATH = "${MAVEN_HOME}/bin:${NODEJS_HOME}:${HOMEBREW_BIN}:${env.PATH}"
+    NODEJS_HOME = '/usr/bin'
+    PATH = "${MAVEN_HOME}/bin:${NODEJS_HOME}:${env.PATH}"
 
-    TEAM_EMAIL = 'othmane.afilali@gritlab.ax,jedi.reston@gritlab.ax'
-    EMAIL_JEDI = 'jedi.reston@gritlab.ax'
-    EMAIL_OZZY = 'othmane.afilali@gritlab.ax'
+    // Email credentials stored in Jenkins - see credentials management section
+    TEAM_EMAIL = credentials('team-email')
+    EMAIL_JEDI = credentials('email-jedi')
+    EMAIL_OZZY = credentials('email-ozzy')
 
-    // Add this line for Karma/Angular tests
-    CHROME_BIN = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+    // Add this line for Karma/Angular tests (Ubuntu/Linux path)
+    CHROME_BIN = '/usr/bin/google-chrome'
 }
 
     stages {
@@ -89,99 +89,102 @@ environment {
                 echo 'Deploying application to AWS EC2...'
                 
                 script {
-                    def AWS_REGION = 'eu-north-1'
-                    def ECR_REGISTRY = '240316737698.dkr.ecr.eu-north-1.amazonaws.com'
-                    def EC2_HOST = '13.50.231.161'
-                    def EC2_USER = 'ec2-user'
-                    def EC2_KEY = "${env.HOME}/.jenkins/.ssh/mr-jenk-key.pem"
-                    def BUILD_TAG = "${BUILD_NUMBER}"
-                    
-                    try {
-                        // Step 1: Login to AWS ECR
-                        echo '📦 Logging in to AWS ECR...'
-                        sh """
-                            mkdir -p ~/.docker
-                            echo '{"auths":{}}' > ~/.docker/config.json
-                            aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
-                        """
+                    withCredentials([
+                        string(credentialsId: 'aws-region', variable: 'AWS_REGION'),
+                        string(credentialsId: 'ecr-registry', variable: 'ECR_REGISTRY'),
+                        string(credentialsId: 'ec2-host', variable: 'EC2_HOST'),
+                        string(credentialsId: 'ec2-user', variable: 'EC2_USER'),
+                        file(credentialsId: 'ec2-ssh-key', variable: 'EC2_KEY')
+                    ]) {
+                        def BUILD_TAG = "${BUILD_NUMBER}"
                         
-                        // Step 2: Build Docker images for each service
-                        echo '🔨 Building Docker images...'
-                        sh """
-                            # Build Java microservices (Spring Boot apps)
-                            docker build -t ${ECR_REGISTRY}/service-registry:${BUILD_TAG} ./service-registry
-                            docker build -t ${ECR_REGISTRY}/api-gateway:${BUILD_TAG} ./api-gateway
-                            docker build -t ${ECR_REGISTRY}/user-service:${BUILD_TAG} ./user-service
-                            docker build -t ${ECR_REGISTRY}/product-service:${BUILD_TAG} ./product-service
-                            docker build -t ${ECR_REGISTRY}/media-service:${BUILD_TAG} ./media-service
+                        try {
+                            // Step 1: Login to AWS ECR
+                            echo '📦 Logging in to AWS ECR...'
+                            sh """
+                                mkdir -p ~/.docker
+                                echo '{"auths":{}}' > ~/.docker/config.json
+                                aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
+                            """
                             
-                            # Build Angular frontend
-                            docker build -t ${ECR_REGISTRY}/buy-01-ui:${BUILD_TAG} ./buy-01-ui
-                        """
-                        
-                        // Step 3: Push images to ECR
-                        echo '⬆️  Pushing images to AWS ECR...'
-                        sh """
-                            docker push ${ECR_REGISTRY}/service-registry:${BUILD_TAG}
-                            docker push ${ECR_REGISTRY}/api-gateway:${BUILD_TAG}
-                            docker push ${ECR_REGISTRY}/user-service:${BUILD_TAG}
-                            docker push ${ECR_REGISTRY}/product-service:${BUILD_TAG}
-                            docker push ${ECR_REGISTRY}/media-service:${BUILD_TAG}
-                            docker push ${ECR_REGISTRY}/buy-01-ui:${BUILD_TAG}
+                            // Step 2: Build Docker images for each service
+                            echo '🔨 Building Docker images...'
+                            sh """
+                                # Build Java microservices (Spring Boot apps)
+                                docker build -t ${ECR_REGISTRY}/service-registry:${BUILD_TAG} ./service-registry
+                                docker build -t ${ECR_REGISTRY}/api-gateway:${BUILD_TAG} ./api-gateway
+                                docker build -t ${ECR_REGISTRY}/user-service:${BUILD_TAG} ./user-service
+                                docker build -t ${ECR_REGISTRY}/product-service:${BUILD_TAG} ./product-service
+                                docker build -t ${ECR_REGISTRY}/media-service:${BUILD_TAG} ./media-service
+                                
+                                # Build Angular frontend
+                                docker build -t ${ECR_REGISTRY}/buy-01-ui:${BUILD_TAG} ./buy-01-ui
+                            """
                             
-                            # Tag as 'latest' for easier reference
-                            docker tag ${ECR_REGISTRY}/service-registry:${BUILD_TAG} ${ECR_REGISTRY}/service-registry:latest
-                            docker tag ${ECR_REGISTRY}/api-gateway:${BUILD_TAG} ${ECR_REGISTRY}/api-gateway:latest
-                            docker tag ${ECR_REGISTRY}/user-service:${BUILD_TAG} ${ECR_REGISTRY}/user-service:latest
-                            docker tag ${ECR_REGISTRY}/product-service:${BUILD_TAG} ${ECR_REGISTRY}/product-service:latest
-                            docker tag ${ECR_REGISTRY}/media-service:${BUILD_TAG} ${ECR_REGISTRY}/media-service:latest
-                            docker tag ${ECR_REGISTRY}/buy-01-ui:${BUILD_TAG} ${ECR_REGISTRY}/buy-01-ui:latest
+                            // Step 3: Push images to ECR
+                            echo '⬆️  Pushing images to AWS ECR...'
+                            sh """
+                                docker push ${ECR_REGISTRY}/service-registry:${BUILD_TAG}
+                                docker push ${ECR_REGISTRY}/api-gateway:${BUILD_TAG}
+                                docker push ${ECR_REGISTRY}/user-service:${BUILD_TAG}
+                                docker push ${ECR_REGISTRY}/product-service:${BUILD_TAG}
+                                docker push ${ECR_REGISTRY}/media-service:${BUILD_TAG}
+                                docker push ${ECR_REGISTRY}/buy-01-ui:${BUILD_TAG}
+                                
+                                # Tag as 'latest' for easier reference
+                                docker tag ${ECR_REGISTRY}/service-registry:${BUILD_TAG} ${ECR_REGISTRY}/service-registry:latest
+                                docker tag ${ECR_REGISTRY}/api-gateway:${BUILD_TAG} ${ECR_REGISTRY}/api-gateway:latest
+                                docker tag ${ECR_REGISTRY}/user-service:${BUILD_TAG} ${ECR_REGISTRY}/user-service:latest
+                                docker tag ${ECR_REGISTRY}/product-service:${BUILD_TAG} ${ECR_REGISTRY}/product-service:latest
+                                docker tag ${ECR_REGISTRY}/media-service:${BUILD_TAG} ${ECR_REGISTRY}/media-service:latest
+                                docker tag ${ECR_REGISTRY}/buy-01-ui:${BUILD_TAG} ${ECR_REGISTRY}/buy-01-ui:latest
+                                
+                                docker push ${ECR_REGISTRY}/service-registry:latest
+                                docker push ${ECR_REGISTRY}/api-gateway:latest
+                                docker push ${ECR_REGISTRY}/user-service:latest
+                                docker push ${ECR_REGISTRY}/product-service:latest
+                                docker push ${ECR_REGISTRY}/media-service:latest
+                                docker push ${ECR_REGISTRY}/buy-01-ui:latest
+                            """
                             
-                            docker push ${ECR_REGISTRY}/service-registry:latest
-                            docker push ${ECR_REGISTRY}/api-gateway:latest
-                            docker push ${ECR_REGISTRY}/user-service:latest
-                            docker push ${ECR_REGISTRY}/product-service:latest
-                            docker push ${ECR_REGISTRY}/media-service:latest
-                            docker push ${ECR_REGISTRY}/buy-01-ui:latest
-                        """
-                        
-                        // Step 4: Deploy to EC2 via SSH using docker-compose
-                        echo "🚀 Deploying to EC2 instance (${EC2_HOST})..."
-                        sh """
-                            # Copy docker-compose.yml and certs to EC2
-                            scp -i ${EC2_KEY} -o StrictHostKeyChecking=no \
-                                docker-compose.yml ${EC2_USER}@${EC2_HOST}:/home/ec2-user/
+                            // Step 4: Deploy to EC2 via SSH using docker-compose
+                            echo "🚀 Deploying to EC2 instance..."
+                            sh """
+                                # Copy docker-compose.yml and certs to EC2
+                                scp -i ${EC2_KEY} -o StrictHostKeyChecking=no \
+                                    docker-compose.yml ${EC2_USER}@${EC2_HOST}:/home/ec2-user/
+                                
+                                scp -i ${EC2_KEY} -o StrictHostKeyChecking=no -r \
+                                    certs ${EC2_USER}@${EC2_HOST}:/home/ec2-user/
+                                
+                                # Install Docker Compose on EC2
+                                ssh -i ${EC2_KEY} -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} \\
+                                    "if ! command -v docker-compose &> /dev/null; then \\
+                                        echo 'Installing Docker Compose...'; \\
+                                        sudo curl -L 'https://github.com/docker/compose/releases/latest/download/docker-compose-\$(uname -s)-\$(uname -m)' -o /usr/local/bin/docker-compose; \\
+                                        sudo chmod +x /usr/local/bin/docker-compose; \\
+                                        docker-compose --version; \\
+                                    fi"
+                                
+                                # Deploy services on EC2
+                                ssh -i ${EC2_KEY} -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} \\
+                                    "cd /home/ec2-user && \\
+                                    docker-compose down || true && \\
+                                    docker-compose pull || echo 'Warning: Some images may not have pulled (OK if already cached)' && \\
+                                    docker-compose up -d && \\
+                                    echo '✅ Deployment successful!' && \\
+                                    docker-compose ps"
+                            """
                             
-                            scp -i ${EC2_KEY} -o StrictHostKeyChecking=no -r \
-                                certs ${EC2_USER}@${EC2_HOST}:/home/ec2-user/
+                            echo '✅ Application deployed successfully to EC2!'
+                            echo "📍 Application deployment complete"
+                            echo "🔗 API Gateway: Running on EC2"
                             
-                            # Install Docker Compose on EC2
-                            ssh -i ${EC2_KEY} -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} \\
-                                "if ! command -v docker-compose &> /dev/null; then \\
-                                    echo 'Installing Docker Compose...'; \\
-                                    sudo curl -L 'https://github.com/docker/compose/releases/latest/download/docker-compose-\$(uname -s)-\$(uname -m)' -o /usr/local/bin/docker-compose; \\
-                                    sudo chmod +x /usr/local/bin/docker-compose; \\
-                                    docker-compose --version; \\
-                                fi"
-                            
-                            # Deploy services on EC2
-                            ssh -i ${EC2_KEY} -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} \\
-                                "cd /home/ec2-user && \\
-                                docker-compose down || true && \\
-                                docker-compose pull || echo 'Warning: Some images may not have pulled (OK if already cached)' && \\
-                                docker-compose up -d && \\
-                                echo '✅ Deployment successful!' && \\
-                                docker-compose ps"
-                        """
-                        
-                        echo '✅ Application deployed successfully to EC2!'
-                        echo "📍 Access your application at: http://${EC2_HOST}:4200 (or :80 for HTTP)"
-                        echo "🔗 API Gateway: http://${EC2_HOST}:8080"
-                        
-                        } catch (Exception e) {
-                            echo "❌ Deployment failed: ${e.message}"
-                            throw e
-                        }
+                            } catch (Exception e) {
+                                echo "❌ Deployment failed: ${e.message}"
+                                throw e
+                            }
+                    }
                 }
             }
         }
