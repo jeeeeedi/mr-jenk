@@ -6,10 +6,7 @@ environment {
     NODEJS_HOME = '/usr/bin'
     PATH = "${MAVEN_HOME}/bin:${NODEJS_HOME}:${env.PATH}"
 
-    // Email credentials stored in Jenkins - see credentials management section
     TEAM_EMAIL = credentials('team-email')
-    EMAIL_JEDI = credentials('email-jedi')
-    EMAIL_OZZY = credentials('email-ozzy')
 
     // Add this line for Karma/Angular tests (Ubuntu/Linux path)
     CHROME_BIN = '/usr/bin/google-chrome'
@@ -327,7 +324,7 @@ SSHEOF
                     </body>
                     </html>
                 ''',
-                to: "${EMAIL_OZZY}",
+                to: "${TEAM_EMAIL}",
                 recipientProviders: [brokenBuildSuspects(), requestor()],
                 mimeType: 'text/html'
             )
@@ -437,7 +434,7 @@ SSHEOF
                     </body>
                     </html>
                 ''',
-                to: "${env.TEAM_EMAIL}, ${env.EMAIL_JEDI}, ${env.EMAIL_OZZY}",
+                to: "${env.TEAM_EMAIL}",
                 recipientProviders: [brokenBuildSuspects(), requestor(), developers()],
                 mimeType: 'text/html'
             )
@@ -470,7 +467,7 @@ SSHEOF
                     </body>
                     </html>
                 ''',
-                to: "${EMAIL_OZZY}",
+                to: "${TEAM_EMAIL}",
                 recipientProviders: [requestor()],
                 mimeType: 'text/html'
             )
