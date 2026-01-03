@@ -24,8 +24,8 @@ hs_err_pid*
 replay_pid*
 
 # Environment variable files
-.env
-.env.*
+# .env
+# .env.*
 
 # To load env file it manually: `export $(cat .env | xargs)`
 

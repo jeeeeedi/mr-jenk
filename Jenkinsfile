@@ -13,6 +13,9 @@ environment {
 
     // Add this line for Karma/Angular tests (Ubuntu/Linux path)
     CHROME_BIN = '/usr/bin/google-chrome'
+    
+    // Build variables
+    BUILD_TAG = "${BUILD_NUMBER}"
 }
 
     stages {
@@ -107,17 +110,33 @@ environment {
                 echo 'Deploying application to AWS EC2...'
                 
                 script {
-L                    withCredentials([
+                    withCredentials([
                         string(credentialsId: 'aws-region', variable: 'AWS_REGION'),
                         string(credentialsId: 'ecr-registry', variable: 'ECR_REGISTRY'),
                         string(credentialsId: 'ec2-host', variable: 'EC2_HOST'),
                         string(credentialsId: 'ec2-user', variable: 'EC2_USER'),
-                        file(credentialsId: 'ec2-ssh-key', variable: 'EC2_KEY')
+                        file(credentialsId: 'ec2-ssh-key', variable: 'EC2_KEY'),
+                        string(credentialsId: 'mongodb-username', variable: 'MONGODB_USER'),
+                        string(credentialsId: 'mongodb-password', variable: 'MONGODB_PASS')
                     ]) {
-                        def BUILD_TAG = "${BUILD_NUMBER}"
                         
                         try {
-                            // Step 1: Login to AWS ECR
+                            // Step 1: Prepare environment file with credentials
+                            echo '📝 Preparing deployment environment...'
+                            sh """
+                                # Create .env.production file with sensitive credentials
+                                cat > .env.production << EOF
+# Production environment variables (Generated at build time)
+MONGODB_ROOT_USERNAME=${MONGODB_USER}
+MONGODB_ROOT_PASSWORD=${MONGODB_PASS}
+AWS_REGION=${AWS_REGION}
+ECR_REGISTRY=${ECR_REGISTRY}
+BUILD_NUMBER=${BUILD_TAG}
+EOF
+                                echo "✓ Environment file prepared"
+                            """
+                            
+                            // Step 2: Login to AWS ECR
                             echo '📦 Logging in to AWS ECR...'
                             sh """
                                 mkdir -p ~/.docker
@@ -125,7 +144,7 @@ L                    withCredentials([
                                 aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
                             """
                             
-                            // Step 2: Build Docker images for each service
+                            // Step 3: Build Docker images for each service
                             echo '🔨 Building Docker images...'
                             sh """
                                 # Build Java microservices (Spring Boot apps)
@@ -139,7 +158,7 @@ L                    withCredentials([
                                 docker build -t ${ECR_REGISTRY}/buy-01-ui:${BUILD_TAG} ./buy-01-ui
                             """
                             
-                            // Step 3: Push images to ECR
+                            // Step 4: Push images to ECR
                             echo '⬆️  Pushing images to AWS ECR...'
                             sh """
                                 docker push ${ECR_REGISTRY}/service-registry:${BUILD_TAG}
@@ -165,21 +184,23 @@ L                    withCredentials([
                                 docker push ${ECR_REGISTRY}/buy-01-ui:latest
                             """
                             
-                            // Step 4: Deploy to EC2 via SSH using docker-compose
+                            // Step 5: Deploy to EC2 via SSH using docker-compose
                             echo "🚀 Deploying to EC2 instance..."
                             sh """
-                                # Copy docker-compose.yml, .env files, and certs to EC2
+                                # Copy deployment files to EC2
                                 scp -i ${EC2_KEY} -o StrictHostKeyChecking=no \
                                     docker-compose.yml ${EC2_USER}@${EC2_HOST}:/home/ubuntu/
                                 
-                                # Copy all .env files
                                 scp -i ${EC2_KEY} -o StrictHostKeyChecking=no \
-                                    .env* ${EC2_USER}@${EC2_HOST}:/home/ubuntu/ || true
+                                    .env ${EC2_USER}@${EC2_HOST}:/home/ubuntu/
+                                
+                                scp -i ${EC2_KEY} -o StrictHostKeyChecking=no \
+                                    .env.production ${EC2_USER}@${EC2_HOST}:/home/ubuntu/
                                 
                                 scp -i ${EC2_KEY} -o StrictHostKeyChecking=no -r \
                                     certs ${EC2_USER}@${EC2_HOST}:/home/ubuntu/
                                 
-                                # Install Docker Compose on EC2 if not present
+                                # Deploy services on EC2
                                 ssh -i ${EC2_KEY} -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} << 'SSHEOF'
                                     if ! command -v docker-compose &> /dev/null; then
                                         echo 'Installing Docker Compose...'
@@ -188,8 +209,8 @@ L                    withCredentials([
                                         docker-compose --version
                                     fi
                                     
-                                    # Deploy services on EC2
                                     cd /home/ubuntu
+                                    # Use both .env files - .env has defaults, .env.production has credentials
                                     docker-compose down || true
                                     docker-compose pull || echo 'Warning: Some images may not have pulled (OK if already cached)'
                                     docker-compose up -d
@@ -200,7 +221,7 @@ SSHEOF
                             
                             echo '✅ Application deployed successfully to EC2!'
                             echo "📍 Application deployment complete"
-                            echo "🔗 API Gateway: Running on EC2"
+                            echo "🔗 API Gateway: http://${EC2_HOST}:8080"
                             
                             } catch (Exception e) {
                                 echo "❌ Deployment failed: ${e.message}"
