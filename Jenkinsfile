@@ -21,25 +21,43 @@ environment {
                 checkout scm
             }
         }
+        stage('Verify Environment') {
+            steps {
+                echo 'Verifying build environment...'
+                sh '''
+                    echo "Java version:"
+                    java -version
+                    echo ""
+                    echo "Maven version:"
+                    mvn --version
+                    echo ""
+                    echo "Node.js version:"
+                    node --version
+                    echo ""
+                    echo "npm version:"
+                    npm --version
+                    echo ""
+                    echo "Docker version:"
+                    docker --version
+                    echo ""
+                    # Make mvnw executable
+                    chmod +x ./mvnw
+                    echo "Maven wrapper executable: ✓"
+                '''
+            }
+        }
         stage('Build Backend') {
             steps {
                 echo 'Building backend services...'
-                sh 'mvn clean install -DskipTests'
+                sh './mvnw clean install -DskipTests -Dorg.jenkinsci.plugins.durabletask.BourneShellScript.HEARTBEAT_CHECK_INTERVAL=86400'
             }
         }
         stage('Test Backend') {
             steps {
                 echo 'Running JUnit tests...'
                 sh '''
-                    # set -e: Exit immediately if any command exits with a non-zero status
                     set -e
-                    # Run Maven tests for all backend services (user-service, product-service, media-service, api-gateway, service-registry)
-                    mvn test
-                    # Explicit check: if mvn test fails (exit code != 0), the pipeline will:
-                    # 1. Print error message
-                    # 2. Exit with code 1 (failure status)
-                    # 3. Prevent progression to next stages (Build Frontend, Test Frontend, Deploy)
-                    # 4. Trigger the post { failure } block with clear error reporting
+                    ./mvnw test -Dorg.jenkinsci.plugins.durabletask.BourneShellScript.HEARTBEAT_CHECK_INTERVAL=86400
                     if [ $? -ne 0 ]; then
                         echo "❌ Backend tests FAILED! Pipeline will STOP here."
                         exit 1
@@ -89,7 +107,7 @@ environment {
                 echo 'Deploying application to AWS EC2...'
                 
                 script {
-                    withCredentials([
+L                    withCredentials([
                         string(credentialsId: 'aws-region', variable: 'AWS_REGION'),
                         string(credentialsId: 'ecr-registry', variable: 'ECR_REGISTRY'),
                         string(credentialsId: 'ec2-host', variable: 'EC2_HOST'),
@@ -150,30 +168,34 @@ environment {
                             // Step 4: Deploy to EC2 via SSH using docker-compose
                             echo "🚀 Deploying to EC2 instance..."
                             sh """
-                                # Copy docker-compose.yml and certs to EC2
+                                # Copy docker-compose.yml, .env files, and certs to EC2
                                 scp -i ${EC2_KEY} -o StrictHostKeyChecking=no \
-                                    docker-compose.yml ${EC2_USER}@${EC2_HOST}:/home/ec2-user/
+                                    docker-compose.yml ${EC2_USER}@${EC2_HOST}:/home/ubuntu/
+                                
+                                # Copy all .env files
+                                scp -i ${EC2_KEY} -o StrictHostKeyChecking=no \
+                                    .env* ${EC2_USER}@${EC2_HOST}:/home/ubuntu/ || true
                                 
                                 scp -i ${EC2_KEY} -o StrictHostKeyChecking=no -r \
-                                    certs ${EC2_USER}@${EC2_HOST}:/home/ec2-user/
+                                    certs ${EC2_USER}@${EC2_HOST}:/home/ubuntu/
                                 
-                                # Install Docker Compose on EC2
-                                ssh -i ${EC2_KEY} -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} \\
-                                    "if ! command -v docker-compose &> /dev/null; then \\
-                                        echo 'Installing Docker Compose...'; \\
-                                        sudo curl -L 'https://github.com/docker/compose/releases/latest/download/docker-compose-\$(uname -s)-\$(uname -m)' -o /usr/local/bin/docker-compose; \\
-                                        sudo chmod +x /usr/local/bin/docker-compose; \\
-                                        docker-compose --version; \\
-                                    fi"
-                                
-                                # Deploy services on EC2
-                                ssh -i ${EC2_KEY} -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} \\
-                                    "cd /home/ec2-user && \\
-                                    docker-compose down || true && \\
-                                    docker-compose pull || echo 'Warning: Some images may not have pulled (OK if already cached)' && \\
-                                    docker-compose up -d && \\
-                                    echo '✅ Deployment successful!' && \\
-                                    docker-compose ps"
+                                # Install Docker Compose on EC2 if not present
+                                ssh -i ${EC2_KEY} -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} << 'SSHEOF'
+                                    if ! command -v docker-compose &> /dev/null; then
+                                        echo 'Installing Docker Compose...'
+                                        sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-\$(uname -s)-\$(uname -m)" -o /usr/local/bin/docker-compose
+                                        sudo chmod +x /usr/local/bin/docker-compose
+                                        docker-compose --version
+                                    fi
+                                    
+                                    # Deploy services on EC2
+                                    cd /home/ubuntu
+                                    docker-compose down || true
+                                    docker-compose pull || echo 'Warning: Some images may not have pulled (OK if already cached)'
+                                    docker-compose up -d
+                                    echo '✅ Deployment successful!'
+                                    docker-compose ps
+SSHEOF
                             """
                             
                             echo '✅ Application deployed successfully to EC2!'
