@@ -227,7 +227,6 @@ EOF
                             echo "🚀 Deploying to EC2 instance..."
                             sh '''
                                 set -e
-                                EC2_KEY_PATH=$(cat $EC2_KEY)
                                 
                                 # Copy deployment files to EC2
                                 echo "📋 Copying deployment files..."
