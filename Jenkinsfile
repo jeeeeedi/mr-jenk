@@ -8,8 +8,8 @@ environment {
 
     TEAM_EMAIL = credentials('team-email')
 
-    // Add this line for Karma/Angular tests (Ubuntu/Linux path)
-    CHROME_BIN = '/usr/bin/google-chrome'
+    // Chromium browser for Angular tests (Ubuntu/Linux path)
+    CHROME_BIN = '/snap/bin/chromium'
     
     // Build variables
     BUILD_TAG = "${BUILD_NUMBER}"
