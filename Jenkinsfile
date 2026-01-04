@@ -223,6 +223,51 @@ EOF
                                 scp -i "$EC2_KEY" -o StrictHostKeyChecking=no \
                                     rollback.sh ${EC2_USER}@${EC2_HOST}:/home/ubuntu/
                                 
+                            // Step 5: Deploy to EC2 via SSH using docker-compose
+                            echo "🚀 Deploying to EC2 instance..."
+                            sh '''
+                                set -e
+                                EC2_KEY_PATH=$(cat $EC2_KEY)
+                                
+                                # Copy deployment files to EC2
+                                echo "📋 Copying deployment files..."
+                                scp -i "$EC2_KEY" -o StrictHostKeyChecking=no \
+                                    docker-compose.yml ${EC2_USER}@${EC2_HOST}:/home/ubuntu/
+                                
+                                scp -i "$EC2_KEY" -o StrictHostKeyChecking=no \
+                                    .env ${EC2_USER}@${EC2_HOST}:/home/ubuntu/
+                                
+                                scp -i "$EC2_KEY" -o StrictHostKeyChecking=no \
+                                    .env.production ${EC2_USER}@${EC2_HOST}:/home/ubuntu/
+                                
+                                # Copy service-specific .env files
+                                scp -i "$EC2_KEY" -o StrictHostKeyChecking=no \
+                                    .env.service-registry ${EC2_USER}@${EC2_HOST}:/home/ubuntu/
+                                
+                                scp -i "$EC2_KEY" -o StrictHostKeyChecking=no \
+                                    .env.api-gateway ${EC2_USER}@${EC2_HOST}:/home/ubuntu/
+                                
+                                scp -i "$EC2_KEY" -o StrictHostKeyChecking=no \
+                                    .env.user-service ${EC2_USER}@${EC2_HOST}:/home/ubuntu/
+                                
+                                scp -i "$EC2_KEY" -o StrictHostKeyChecking=no \
+                                    .env.product-service ${EC2_USER}@${EC2_HOST}:/home/ubuntu/
+                                
+                                scp -i "$EC2_KEY" -o StrictHostKeyChecking=no \
+                                    .env.media-service ${EC2_USER}@${EC2_HOST}:/home/ubuntu/
+                                
+                                scp -i "$EC2_KEY" -o StrictHostKeyChecking=no -r \
+                                    certs ${EC2_USER}@${EC2_HOST}:/home/ubuntu/
+                                
+                                # Copy rollback script
+                                scp -i "$EC2_KEY" -o StrictHostKeyChecking=no \
+                                    rollback.sh ${EC2_USER}@${EC2_HOST}:/home/ubuntu/
+                                
+                                # Copy Docker config with ECR auth credentials
+                                echo "📦 Copying Docker auth credentials..."
+                                scp -i "$EC2_KEY" -o StrictHostKeyChecking=no \
+                                    ~/.docker/config.json ${EC2_USER}@${EC2_HOST}:/tmp/docker-config.json 2>/dev/null || echo "Note: Docker config not found, ECR will be accessed via jenkins credentials"
+                                
                                 # Deploy services on EC2
                                 echo "🚀 Starting services via docker-compose..."
                                 ssh -i "$EC2_KEY" -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} << 'SSHEOF'
@@ -242,6 +287,13 @@ EOF
                                             sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
                                             sudo chmod +x /usr/local/bin/docker-compose
                                             docker-compose --version
+                                        fi && \
+                                        if [ -f /tmp/docker-config.json ]; then
+                                            echo "Installing Docker auth credentials..."
+                                            mkdir -p ~/.docker && \
+                                            cp /tmp/docker-config.json ~/.docker/config.json && \
+                                            chmod 600 ~/.docker/config.json && \
+                                            echo "✓ ECR credentials configured"
                                         fi && \
                                         echo "=== Saving deployment history ===" && \
                                         mkdir -p /home/ubuntu/deployments && \
