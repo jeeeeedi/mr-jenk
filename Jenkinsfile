@@ -187,46 +187,6 @@ EOF
                             echo "🚀 Deploying to EC2 instance..."
                             sh '''
                                 set -e
-                                EC2_KEY_PATH=$(cat $EC2_KEY)
-                                
-                                # Copy deployment files to EC2
-                                echo "📋 Copying deployment files..."
-                                scp -i "$EC2_KEY" -o StrictHostKeyChecking=no \
-                                    docker-compose.yml ${EC2_USER}@${EC2_HOST}:/home/ubuntu/
-                                
-                                scp -i "$EC2_KEY" -o StrictHostKeyChecking=no \
-                                    .env ${EC2_USER}@${EC2_HOST}:/home/ubuntu/
-                                
-                                scp -i "$EC2_KEY" -o StrictHostKeyChecking=no \
-                                    .env.production ${EC2_USER}@${EC2_HOST}:/home/ubuntu/
-                                
-                                # Copy service-specific .env files
-                                scp -i "$EC2_KEY" -o StrictHostKeyChecking=no \
-                                    .env.service-registry ${EC2_USER}@${EC2_HOST}:/home/ubuntu/
-                                
-                                scp -i "$EC2_KEY" -o StrictHostKeyChecking=no \
-                                    .env.api-gateway ${EC2_USER}@${EC2_HOST}:/home/ubuntu/
-                                
-                                scp -i "$EC2_KEY" -o StrictHostKeyChecking=no \
-                                    .env.user-service ${EC2_USER}@${EC2_HOST}:/home/ubuntu/
-                                
-                                scp -i "$EC2_KEY" -o StrictHostKeyChecking=no \
-                                    .env.product-service ${EC2_USER}@${EC2_HOST}:/home/ubuntu/
-                                
-                                scp -i "$EC2_KEY" -o StrictHostKeyChecking=no \
-                                    .env.media-service ${EC2_USER}@${EC2_HOST}:/home/ubuntu/
-                                
-                                scp -i "$EC2_KEY" -o StrictHostKeyChecking=no -r \
-                                    certs ${EC2_USER}@${EC2_HOST}:/home/ubuntu/
-                                
-                                # Copy rollback script
-                                scp -i "$EC2_KEY" -o StrictHostKeyChecking=no \
-                                    rollback.sh ${EC2_USER}@${EC2_HOST}:/home/ubuntu/
-                                
-                            // Step 5: Deploy to EC2 via SSH using docker-compose
-                            echo "🚀 Deploying to EC2 instance..."
-                            sh '''
-                                set -e
                                 
                                 # Copy deployment files to EC2
                                 echo "📋 Copying deployment files..."
