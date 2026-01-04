@@ -40,16 +40,14 @@ environment {
                     echo "Docker version:"
                     docker --version
                     echo ""
-                    # Make mvnw executable
-                    chmod +x ./mvnw
-                    echo "Maven wrapper executable: ✓"
+                    echo "✓ All build tools verified!"
                 '''
             }
         }
         stage('Build Backend') {
             steps {
                 echo 'Building backend services...'
-                sh './mvnw clean install -DskipTests -Dorg.jenkinsci.plugins.durabletask.BourneShellScript.HEARTBEAT_CHECK_INTERVAL=86400'
+                sh 'mvn clean install -DskipTests -Dorg.jenkinsci.plugins.durabletask.BourneShellScript.HEARTBEAT_CHECK_INTERVAL=86400'
             }
         }
         stage('Test Backend') {
@@ -57,7 +55,7 @@ environment {
                 echo 'Running JUnit tests...'
                 sh '''
                     set -e
-                    ./mvnw test -Dorg.jenkinsci.plugins.durabletask.BourneShellScript.HEARTBEAT_CHECK_INTERVAL=86400
+                    mvn test -Dorg.jenkinsci.plugins.durabletask.BourneShellScript.HEARTBEAT_CHECK_INTERVAL=86400
                     if [ $? -ne 0 ]; then
                         echo "❌ Backend tests FAILED! Pipeline will STOP here."
                         exit 1
