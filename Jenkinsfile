@@ -133,11 +133,15 @@ EOF
                             
                             // Step 2: Login to AWS ECR
                             echo '📦 Logging in to AWS ECR...'
-                            sh """
+                            sh '''
+                                set -e
                                 mkdir -p ~/.docker
-                                echo '{"auths":{}}' > ~/.docker/config.json
-                                aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
-                            """
+                                # Use proper shell for password piping
+                                aws ecr get-login-password --region ${AWS_REGION} > /tmp/ecr-password.txt
+                                cat /tmp/ecr-password.txt | docker login --username AWS --password-stdin ${ECR_REGISTRY}
+                                rm -f /tmp/ecr-password.txt
+                                echo "✓ Successfully logged into ECR"
+                            '''
                             
                             // Step 3: Build Docker images for each service
                             echo '🔨 Building Docker images...'
