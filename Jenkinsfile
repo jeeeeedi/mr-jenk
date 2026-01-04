@@ -118,7 +118,7 @@ environment {
                         try {
                             // Step 1: Prepare environment file with credentials
                             echo '📝 Preparing deployment environment...'
-                            sh """
+                            sh '''
                                 # Create .env.production file with sensitive credentials
                                 cat > .env.production << EOF
 # Production environment variables (Generated at build time)
@@ -129,7 +129,7 @@ ECR_REGISTRY=${ECR_REGISTRY}
 BUILD_NUMBER=${BUILD_TAG}
 EOF
                                 echo "✓ Environment file prepared"
-                            """
+                            '''
                             
                             // Step 2: Login to AWS ECR
                             echo '📦 Logging in to AWS ECR...'
@@ -145,7 +145,7 @@ EOF
                             
                             // Step 3: Build Docker images for each service
                             echo '🔨 Building Docker images...'
-                            sh """
+                            sh '''
                                 # Build Java microservices (Spring Boot apps)
                                 docker build -t ${ECR_REGISTRY}/service-registry:${BUILD_TAG} ./service-registry
                                 docker build -t ${ECR_REGISTRY}/api-gateway:${BUILD_TAG} ./api-gateway
@@ -155,11 +155,11 @@ EOF
                                 
                                 # Build Angular frontend
                                 docker build -t ${ECR_REGISTRY}/buy-01-ui:${BUILD_TAG} ./buy-01-ui
-                            """
+                            '''
                             
                             // Step 4: Push images to ECR
                             echo '⬆️  Pushing images to AWS ECR...'
-                            sh """
+                            sh '''
                                 docker push ${ECR_REGISTRY}/service-registry:${BUILD_TAG}
                                 docker push ${ECR_REGISTRY}/api-gateway:${BUILD_TAG}
                                 docker push ${ECR_REGISTRY}/user-service:${BUILD_TAG}
@@ -181,42 +181,112 @@ EOF
                                 docker push ${ECR_REGISTRY}/product-service:latest
                                 docker push ${ECR_REGISTRY}/media-service:latest
                                 docker push ${ECR_REGISTRY}/buy-01-ui:latest
-                            """
+                            '''
                             
                             // Step 5: Deploy to EC2 via SSH using docker-compose
                             echo "🚀 Deploying to EC2 instance..."
-                            sh """
+                            sh '''
+                                set -e
+                                EC2_KEY_PATH=$(cat $EC2_KEY)
+                                
                                 # Copy deployment files to EC2
-                                scp -i ${EC2_KEY} -o StrictHostKeyChecking=no \
+                                echo "📋 Copying deployment files..."
+                                scp -i "$EC2_KEY" -o StrictHostKeyChecking=no \
                                     docker-compose.yml ${EC2_USER}@${EC2_HOST}:/home/ubuntu/
                                 
-                                scp -i ${EC2_KEY} -o StrictHostKeyChecking=no \
+                                scp -i "$EC2_KEY" -o StrictHostKeyChecking=no \
                                     .env ${EC2_USER}@${EC2_HOST}:/home/ubuntu/
                                 
-                                scp -i ${EC2_KEY} -o StrictHostKeyChecking=no \
+                                scp -i "$EC2_KEY" -o StrictHostKeyChecking=no \
                                     .env.production ${EC2_USER}@${EC2_HOST}:/home/ubuntu/
                                 
-                                scp -i ${EC2_KEY} -o StrictHostKeyChecking=no -r \
+                                # Copy service-specific .env files
+                                scp -i "$EC2_KEY" -o StrictHostKeyChecking=no \
+                                    .env.service-registry ${EC2_USER}@${EC2_HOST}:/home/ubuntu/
+                                
+                                scp -i "$EC2_KEY" -o StrictHostKeyChecking=no \
+                                    .env.api-gateway ${EC2_USER}@${EC2_HOST}:/home/ubuntu/
+                                
+                                scp -i "$EC2_KEY" -o StrictHostKeyChecking=no \
+                                    .env.user-service ${EC2_USER}@${EC2_HOST}:/home/ubuntu/
+                                
+                                scp -i "$EC2_KEY" -o StrictHostKeyChecking=no \
+                                    .env.product-service ${EC2_USER}@${EC2_HOST}:/home/ubuntu/
+                                
+                                scp -i "$EC2_KEY" -o StrictHostKeyChecking=no \
+                                    .env.media-service ${EC2_USER}@${EC2_HOST}:/home/ubuntu/
+                                
+                                scp -i "$EC2_KEY" -o StrictHostKeyChecking=no -r \
                                     certs ${EC2_USER}@${EC2_HOST}:/home/ubuntu/
                                 
+                                # Copy rollback script
+                                scp -i "$EC2_KEY" -o StrictHostKeyChecking=no \
+                                    rollback.sh ${EC2_USER}@${EC2_HOST}:/home/ubuntu/
+                                
                                 # Deploy services on EC2
-                                ssh -i ${EC2_KEY} -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} << 'SSHEOF'
-                                    if ! command -v docker-compose &> /dev/null; then
-                                        echo 'Installing Docker Compose...'
-                                        sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-\$(uname -s)-\$(uname -m)" -o /usr/local/bin/docker-compose
-                                        sudo chmod +x /usr/local/bin/docker-compose
-                                        docker-compose --version
+                                echo "🚀 Starting services via docker-compose..."
+                                ssh -i "$EC2_KEY" -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} << 'SSHEOF'
+                                    set -e
+                                    
+                                    # Add ubuntu user to docker group so it can access Docker daemon
+                                    if ! groups ubuntu | grep -q docker; then
+                                        echo "Adding ubuntu user to docker group..."
+                                        sudo usermod -aG docker ubuntu
+                                        echo "✓ User added to docker group"
                                     fi
                                     
-                                    cd /home/ubuntu
-                                    # Use both .env files - .env has defaults, .env.production has credentials
-                                    docker-compose down || true
-                                    docker-compose pull || echo 'Warning: Some images may not have pulled (OK if already cached)'
-                                    docker-compose up -d
-                                    echo '✅ Deployment successful!'
-                                    docker-compose ps
+                                    # Start a new shell session with updated group membership
+                                    exec sg docker -c 'cd /home/ubuntu && \
+                                        if ! command -v docker-compose &> /dev/null; then
+                                            echo "Installing Docker Compose..."
+                                            sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+                                            sudo chmod +x /usr/local/bin/docker-compose
+                                            docker-compose --version
+                                        fi && \
+                                        echo "=== Saving deployment history ===" && \
+                                        mkdir -p /home/ubuntu/deployments && \
+                                        CURRENT_BUILD=$(cat /home/ubuntu/CURRENT_BUILD.txt 2>/dev/null || echo "none") && \
+                                        echo "Previous deployment: Build #$CURRENT_BUILD" && \
+                                        if [ "$CURRENT_BUILD" != "none" ]; then
+                                            cp docker-compose.yml /home/ubuntu/deployments/docker-compose-$CURRENT_BUILD.yml 2>/dev/null || true
+                                            echo "Backed up docker-compose-$CURRENT_BUILD.yml"
+                                        fi && \
+                                        echo "${BUILD_TAG}" > /home/ubuntu/CURRENT_BUILD.txt && \
+                                        echo "Current deployment: Build #${BUILD_TAG}" && \
+                                        echo "=== Deploying new version ===" && \
+                                        docker-compose down || true && \
+                                        docker-compose pull && \
+                                        docker-compose up -d && \
+                                        echo "Waiting 15 seconds for services to start..." && \
+                                        sleep 15 && \
+                                        echo "=== Running health checks ===" && \
+                                        HEALTH_CHECK_PASSED=true && \
+                                        if ! timeout 30 curl -f http://localhost:8080/api/health >/dev/null 2>&1; then
+                                            echo "❌ Health check FAILED! Rolling back to previous deployment..." && \
+                                            HEALTH_CHECK_PASSED=false && \
+                                            docker-compose down || true && \
+                                            if [ "$CURRENT_BUILD" != "none" ] && [ -f /home/ubuntu/deployments/docker-compose-$CURRENT_BUILD.yml ]; then
+                                                echo "Restoring docker-compose-$CURRENT_BUILD.yml..." && \
+                                                cp /home/ubuntu/deployments/docker-compose-$CURRENT_BUILD.yml docker-compose.yml && \
+                                                echo "$CURRENT_BUILD" > /home/ubuntu/CURRENT_BUILD.txt && \
+                                                docker-compose pull && \
+                                                docker-compose up -d && \
+                                                echo "✅ Rollback to Build #$CURRENT_BUILD completed!"
+                                            else
+                                                echo "⚠️ Could not rollback - no previous deployment found!"
+                                                exit 1
+                                            fi
+                                        else
+                                            echo "✅ Health check PASSED!"
+                                        fi && \
+                                        echo "=== Deployment Status ===" && \
+                                        docker-compose ps && \
+                                        if [ "$HEALTH_CHECK_PASSED" = false ]; then
+                                            echo "❌ Deployment rolled back due to health check failure"
+                                            exit 1
+                                        fi'
 SSHEOF
-                            """
+                            '''
                             
                             echo '✅ Application deployed successfully to EC2!'
                             echo "📍 Application deployment complete"
