@@ -94,7 +94,7 @@ The `rollback.sh` script:
 
 ### Current Implementation
 
-- **Endpoint**: `GET http://localhost:8080/api/health`
+- **Endpoint**: `GET http://localhost:8888/api/health`
 - **Timeout**: 30 seconds
 - **Wait Before Check**: 15 seconds (allows services to start)
 - **Required**: At least one successful response (HTTP 200)
@@ -117,14 +117,14 @@ The `rollback.sh` script:
 To modify health check endpoint or timeout, edit the Jenkinsfile Deploy stage:
 
 ```groovy
-// Change the endpoint
-curl -f http://localhost:8080/api/v1/health
+// Change the endpoint (currently 8888 to avoid conflict with Jenkins on 8080)
+curl -f http://localhost:8888/api/v1/health
 
 // Change timeout (currently 30 seconds)
-timeout 60 curl -f http://localhost:8080/api/health
+timeout 60 curl -f http://localhost:8888/api/health
 
 // Add additional health checks
-curl -f http://localhost:8080/api/health && \
+curl -f http://localhost:8888/api/health && \
 curl -f http://localhost:3000/ && \
 ...
 ```
@@ -227,8 +227,8 @@ docker-compose ps api-gateway
 # View API Gateway logs
 docker-compose logs api-gateway
 
-# Test health endpoint manually
-curl -v http://localhost:8080/api/health
+# Test health endpoint manually (port 8888 external, 8080 internal)
+curl -v http://localhost:8888/api/health
 ```
 
 ## Monitoring Deployments

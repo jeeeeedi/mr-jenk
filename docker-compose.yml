@@ -60,7 +60,7 @@ services:
     image: ${ECR_REGISTRY}/api-gateway:${BUILD_NUMBER:-latest}
     container_name: buy-01-api-gateway
     ports:
-      - "${API_GATEWAY_PORT:-8080}:8080"
+      - "${API_GATEWAY_PORT:-8888}:8080"
     env_file:
       - .env
       - .env.api-gateway
@@ -110,7 +110,7 @@ services:
       SPRING_DATA_MONGODB_URI: mongodb://root:example@mongodb:27017/productdb?authSource=admin
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://service-registry:8761/eureka/
       EUREKA_INSTANCE_HOSTNAME: product-service
-      MEDIA_PUBLIC_URL: http://localhost:8080/api/media
+      MEDIA_PUBLIC_URL: http://localhost:8888/api/media
     depends_on:
       - kafka
       - service-registry

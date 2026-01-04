@@ -265,23 +265,28 @@ EOF
                                         echo "${BUILD_TAG}" > /home/ubuntu/CURRENT_BUILD.txt && \
                                         echo "Current deployment: Build #${BUILD_TAG}" && \
                                         echo "=== Deploying new version ===" && \
-                                        docker-compose down || true && \
+                                        echo "Stopping and removing old containers..." && \
+                                        docker-compose down -v --remove-orphans || true && \
+                                        echo "Waiting 5 seconds for ports to be released..." && \
+                                        sleep 5 && \
                                         docker-compose pull && \
                                         docker-compose up -d && \
                                         echo "Waiting 15 seconds for services to start..." && \
                                         sleep 15 && \
                                         echo "=== Running health checks ===" && \
                                         HEALTH_CHECK_PASSED=true && \
-                                        if ! timeout 30 curl -f http://localhost:8080/api/health >/dev/null 2>&1; then
+                                        if ! timeout 30 curl -f http://localhost:8888/api/health >/dev/null 2>&1; then
                                             echo "❌ Health check FAILED! Rolling back to previous deployment..." && \
                                             HEALTH_CHECK_PASSED=false && \
-                                            docker-compose down || true && \
+                                            docker-compose down -v --remove-orphans || true && \
+                                            sleep 5 && \
                                             if [ "$CURRENT_BUILD" != "none" ] && [ -f /home/ubuntu/deployments/docker-compose-$CURRENT_BUILD.yml ]; then
                                                 echo "Restoring docker-compose-$CURRENT_BUILD.yml..." && \
                                                 cp /home/ubuntu/deployments/docker-compose-$CURRENT_BUILD.yml docker-compose.yml && \
                                                 echo "$CURRENT_BUILD" > /home/ubuntu/CURRENT_BUILD.txt && \
                                                 docker-compose pull && \
                                                 docker-compose up -d && \
+                                                sleep 10 && \
                                                 echo "✅ Rollback to Build #$CURRENT_BUILD completed!"
                                             else
                                                 echo "⚠️ Could not rollback - no previous deployment found!"
