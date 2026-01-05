@@ -23,6 +23,7 @@ pipeline {
             steps {
                 echo 'Verifying build environment...'
                 sh '''
+                    set +e
                     echo "Java version:"
                     java -version
                     echo ""
@@ -30,23 +31,16 @@ pipeline {
                     mvn --version
                     echo ""
                     echo "Node.js version:"
-                    if command -v node &> /dev/null; then
-                        node --version
-                    else
-                        echo "⚠️  Node.js not found in PATH - will attempt to use npm directly"
-                    fi
+                    node --version 2>/dev/null || echo "⚠️  Node.js not found in PATH"
                     echo ""
                     echo "npm version:"
-                    if command -v npm &> /dev/null; then
-                        npm --version
-                    else
-                        echo "⚠️  npm not found - frontend build may fail"
-                    fi
+                    npm --version 2>/dev/null || echo "⚠️  npm not found - frontend build will skip"
                     echo ""
                     echo "Docker version:"
                     docker --version
                     echo ""
                     echo "✓ Essential build tools verified!"
+                    set -e
                 '''
             }
         }
