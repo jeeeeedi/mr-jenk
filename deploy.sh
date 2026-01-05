@@ -69,8 +69,14 @@ done
 echo -e "${GREEN}✓ All images transferred to AWS${NC}"
 echo ""
 
-# 4. Deploy on AWS instance
-echo -e "${YELLOW}[4/5] Starting containers on AWS...${NC}"
+# Transfer docker-compose.yml
+echo -e "${YELLOW}[4/6] Transferring docker-compose.yml...${NC}"
+scp -i "$SSH_KEY" -o StrictHostKeyChecking=no docker-compose.yml "$DEPLOY_HOST":/home/ec2-user/buy-01-app/
+echo -e "${GREEN}✓ docker-compose.yml transferred${NC}"
+echo ""
+
+# 5. Deploy on AWS instance
+echo -e "${YELLOW}[5/6] Starting containers on AWS...${NC}"
 ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "$DEPLOY_HOST" << 'ENDSSH'
 cd /home/ec2-user/buy-01-app
 
