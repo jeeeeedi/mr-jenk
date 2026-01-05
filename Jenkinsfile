@@ -88,7 +88,7 @@ pipeline {
                             # Try using nvm if apt fails
                             curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash 2>/dev/null || true
                             export NVM_DIR="$HOME/.nvm"
-                            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+                            [ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
                             if command -v nvm &> /dev/null; then
                                 nvm install 18
                                 echo "✓ Node.js 18 installed via nvm"
