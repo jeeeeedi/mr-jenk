@@ -71,6 +71,16 @@ pipeline {
         stage('Build Frontend') {
             steps {
                 echo 'Building frontend...'
+                sh '''
+                    # Install Node.js and npm if not available
+                    if ! command -v npm &> /dev/null; then
+                        echo "Installing Node.js and npm..."
+                        curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+                        sudo apt-get install -y nodejs
+                        npm --version
+                        echo "✓ Node.js and npm installed"
+                    fi
+                '''
                 dir('buy-01-ui') {
                     sh 'npm install'
                     sh 'npm run build'
