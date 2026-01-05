@@ -82,21 +82,30 @@ pipeline {
                 echo 'Running frontend tests...'
                 dir('buy-01-ui') {
                     sh '''
-                        # set -e: Exit immediately if any command exits with a non-zero status
+                        # Install junit reporter if not already installed
+                        npm list karma-junit-reporter 2>/dev/null || npm install --save-dev karma-junit-reporter
+                    '''
+                    sh '''
+                        # Create directory for test results
+                        mkdir -p test-results
+                        
+                        # Run Jasmine/Karma tests for Angular frontend in headless Chrome mode
+                        # Configure to output JUnit format for Jenkins parsing
                         set -e
-                        # Run Jasmine/Karma tests for Angular frontend in headless Chrome mode (suitable for CI)
-                        npm test -- --watch=false --browsers=ChromeHeadless
-                        # Explicit check: if npm test fails (exit code != 0), the pipeline will:
-                        # 1. Print error message
-                        # 2. Exit with code 1 (failure status)
-                        # 3. Skip Deploy stage
-                        # 4. Trigger the post { failure } block with clear error reporting
-                        # This ensures test failures block deployments to production
+                        npm test -- --watch=false --browsers=ChromeHeadless --reporters junit
+                        
                         if [ $? -ne 0 ]; then
                             echo "❌ Frontend tests FAILED! Pipeline will STOP here."
                             exit 1
                         fi
                     '''
+                }
+            }
+            post {
+                always {
+                    dir('buy-01-ui') {
+                        junit testResults: 'test-results/*.xml', allowEmptyResults: true
+                    }
                 }
             }
         }
