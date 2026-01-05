@@ -85,10 +85,16 @@ environment {
         }
         stage('Deploy') {
             steps {
-                echo 'Deploying application...'
-                // Example deployment command
-                // sh './deploy.sh'
-                echo 'Simulating deployment to production environment...'
+                echo 'Deploying application to AWS...'
+                script {
+                    sh '''
+                        # Make deploy script executable
+                        chmod +x deploy.sh
+                        
+                        # Run deployment
+                        ./deploy.sh
+                    '''
+                }
             }
         }
     }
