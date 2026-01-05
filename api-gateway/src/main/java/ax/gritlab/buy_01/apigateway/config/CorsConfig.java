@@ -15,10 +15,13 @@ public class CorsConfig {
     public CorsWebFilter corsWebFilter() {
         CorsConfiguration corsConfig = new CorsConfiguration();
 
-        // Allow specific origins
+        // Allow specific origins (localhost for dev, AWS IP for production)
         corsConfig.setAllowedOrigins(Arrays.asList(
                 "http://localhost:4200",
-                "https://localhost:4201"));
+                "https://localhost:4201",
+                "http://51.21.198.139:4200",
+                "http://51.21.198.139:4201",
+                "http://51.21.198.139"));
 
         // Allow all HTTP methods
         corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
