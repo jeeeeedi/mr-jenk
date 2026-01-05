@@ -71,34 +71,6 @@ pipeline {
         stage('Build Frontend') {
             steps {
                 echo 'Building frontend...'
-                sh '''
-                    # Install Node.js and npm if not available
-                    if ! command -v npm &> /dev/null; then
-                        echo "Installing Node.js and npm..."
-                        set +e
-                        sudo -n apt-get update && sudo -n apt-get install -y nodejs npm 2>/dev/null
-                        INSTALL_STATUS=$?
-                        set -e
-                        if [ $INSTALL_STATUS -eq 0 ]; then
-                            npm --version
-                            echo "✓ Node.js and npm installed"
-                        else
-                            echo "⚠️  Could not install Node.js/npm via apt-get"
-                            echo "Attempting alternative installation method..."
-                            # Try using nvm if apt fails
-                            curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash 2>/dev/null || true
-                            export NVM_DIR="$HOME/.nvm"
-                            [ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
-                            if command -v nvm &> /dev/null; then
-                                nvm install 18
-                                echo "✓ Node.js 18 installed via nvm"
-                            else
-                                echo "❌ Failed to install Node.js - please install manually on Jenkins agent"
-                                exit 1
-                            fi
-                        fi
-                    fi
-                '''
                 dir('buy-01-ui') {
                     sh 'npm install'
                     sh 'npm run build'
