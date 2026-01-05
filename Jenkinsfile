@@ -1,19 +1,19 @@
 pipeline {
     agent any
 
-environment {
-    MAVEN_HOME = tool 'Maven'
-    NODEJS_HOME = '/usr/bin'
-    PATH = "${MAVEN_HOME}/bin:${NODEJS_HOME}:${env.PATH}"
+    environment {
+        MAVEN_HOME = tool 'Maven'
+        NODEJS_HOME = '/usr/bin'
+        PATH = "${MAVEN_HOME}/bin:${NODEJS_HOME}:${env.PATH}"
 
-    TEAM_EMAIL = credentials('team-email')
+        TEAM_EMAIL = credentials('team-email')
 
-    // Google Chrome for Angular tests (Ubuntu/Linux path)
-    CHROME_BIN = '/usr/bin/google-chrome'
-    
-    // Build variables
-    BUILD_TAG = "${BUILD_NUMBER}"
-}
+        // Google Chrome for Angular tests (Ubuntu/Linux path)
+        CHROME_BIN = '/usr/bin/google-chrome'
+        
+        // Build variables
+        BUILD_TAG = "${BUILD_NUMBER}"
+    }
 
     stages {
         stage('Checkout') {
