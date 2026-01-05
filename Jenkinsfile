@@ -1,5 +1,9 @@
 pipeline {
     agent any
+    
+    triggers {
+        pollSCM('* * * * *')  // Poll every minute for changes
+    }
 
 environment {
     MAVEN_HOME = tool 'Maven'
