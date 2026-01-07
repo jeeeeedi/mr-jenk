@@ -111,27 +111,41 @@ docker-compose down || true
 echo "Starting new containers..."
 docker-compose up -d
 
-# Wait for services to start
+# Wait for services to start with progressive health checks
 echo "Waiting for services to initialize..."
-sleep 15
+echo "This may take up to 60 seconds for all services to be ready..."
 
-# Health check for critical services
-echo "Performing health checks..."
 HEALTH_CHECK_FAILED=0
+MAX_RETRIES=12  # 12 retries x 5 seconds = 60 seconds max wait
+RETRY_DELAY=5
 
-# Check Service Registry (Eureka)
-if curl -f -s "http://localhost:8761" > /dev/null 2>&1; then
-    echo "✓ Service Registry is healthy"
-else
-    echo "❌ Service Registry health check failed"
+# Function to check service with retries
+check_service() {
+    local service_name=$1
+    local health_url=$2
+    local retry_count=0
+    
+    echo -n "Checking $service_name..."
+    while [ $retry_count -lt $MAX_RETRIES ]; do
+        if curl -f -s "$health_url" > /dev/null 2>&1; then
+            echo " ✓ healthy (after $((retry_count * RETRY_DELAY))s)"
+            return 0
+        fi
+        retry_count=$((retry_count + 1))
+        echo -n "."
+        sleep $RETRY_DELAY
+    done
+    echo " ❌ failed after ${MAX_RETRIES} attempts"
+    return 1
+}
+
+# Check Service Registry (Eureka) - most critical, starts first
+if ! check_service "Service Registry" "http://localhost:8761"; then
     HEALTH_CHECK_FAILED=1
 fi
 
-# Check API Gateway
-if curl -f -s "http://localhost:8080/actuator/health" > /dev/null 2>&1; then
-    echo "✓ API Gateway is healthy"
-else
-    echo "❌ API Gateway health check failed"
+# Check API Gateway - depends on Service Registry
+if ! check_service "API Gateway" "http://localhost:8080/actuator/health"; then
     HEALTH_CHECK_FAILED=1
 fi
 
@@ -139,12 +153,24 @@ fi
 if curl -f -s "http://localhost:4200" > /dev/null 2>&1; then
     echo "✓ Frontend is healthy"
 else
-    echo "❌ Frontend health check failed"
+    echo "❌ API Gateway health check failed"
+    HEALTH_CHECK_FAILED=1
+fi
+
+# Check Frontend
+if curl -f -s "http://localhost:4200" > /dev/null 2>&1; then
+    echo "Frontend: ✓ healthy"
+else
+    echo "Frontend: ❌ health check failed"
     HEALTH_CHECK_FAILED=1
 fi
 
 if [ $HEALTH_CHECK_FAILED -eq 1 ]; then
+    echo ""
     echo "❌ Health checks failed! Deployment unsuccessful"
+    echo "Checking container logs for troubleshooting..."
+    docker-compose logs --tail=20 service-registry
+    docker-compose logs --tail=20 api-gateway
     exit 1
 fi
 
