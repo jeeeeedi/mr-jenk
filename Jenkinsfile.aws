@@ -11,8 +11,6 @@ environment {
     PATH = "${MAVEN_HOME}/bin:${NODEJS_HOME}:${env.PATH}"
 
     TEAM_EMAIL = 'othmane.afilali@gritlab.ax,jedi.reston@gritlab.ax'
-    EMAIL_JEDI = 'jedi.reston@gritlab.ax'
-    EMAIL_OZZY = 'othmane.afilali@gritlab.ax'
 
     // Add this line for Karma/Angular tests
     CHROME_BIN = '/usr/bin/google-chrome'
@@ -250,7 +248,7 @@ environment {
                     </body>
                     </html>
                 ''',
-                to: "${EMAIL_OZZY}",
+                to: "${TEAM_EMAIL}",
                 recipientProviders: [brokenBuildSuspects(), requestor()],
                 mimeType: 'text/html'
             )
@@ -360,7 +358,7 @@ environment {
                     </body>
                     </html>
                 ''',
-                to: "${env.TEAM_EMAIL}, ${env.EMAIL_JEDI}, ${env.EMAIL_OZZY}",
+                to: "${env.TEAM_EMAIL}",
                 recipientProviders: [brokenBuildSuspects(), requestor(), developers()],
                 mimeType: 'text/html'
             )
@@ -393,7 +391,7 @@ environment {
                     </body>
                     </html>
                 ''',
-                to: "${EMAIL_OZZY}",
+                to: "${TEAM_EMAIL}",
                 recipientProviders: [requestor()],
                 mimeType: 'text/html'
             )

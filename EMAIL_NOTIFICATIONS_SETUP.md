@@ -65,8 +65,6 @@ In the Jenkinsfile, update the email addresses in the `environment` section:
 ```groovy
 environment {
     TEAM_EMAIL = 'othmane.afilali@gritlab.ax,jedi.reston@gritlab.ax'              // All team members
-    EMAIL_JEDI = 'jedi.reston@gritlab.ax'
-    EMAIL_OZZY = 'othmane.afilali@gritlab.ax'
 }
 ```
 
@@ -90,7 +88,7 @@ The pipeline uses the `emailext()` step with the following logic:
 - Contains: Build details, test results, deployment confirmation
 
 **Failure Email:**
-- Sent to: `${TEAM_EMAIL}, ${EMAIL_JEDI}, ${EMAIL_OZZY}`
+- Sent to: `${TEAM_EMAIL}`
 - Recipients include: Developers involved, build requestor
 - Contains: Error details, failure cause analysis, remediation steps
 - Priority: **HIGH** - Goes to leads and DevOps immediately

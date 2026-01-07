@@ -221,7 +221,5 @@ Configure email recipients in `Jenkinsfile.local`:
 ```groovy
 environment {
     TEAM_EMAIL = 'your-team@example.com'
-    EMAIL_JEDI = 'developer1@example.com'
-    EMAIL_OZZY = 'developer2@example.com'
 }
 ```

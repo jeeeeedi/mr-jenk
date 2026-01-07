@@ -7,8 +7,6 @@ pipeline {
 
     environment {
         TEAM_EMAIL = 'othmane.afilali@gritlab.ax,jedi.reston@gritlab.ax'
-        EMAIL_JEDI = 'jedi.reston@gritlab.ax'
-        EMAIL_OZZY = 'othmane.afilali@gritlab.ax'
         
         // Local deployment flag
         DEPLOY_TARGET = 'local'
@@ -258,7 +256,7 @@ pipeline {
                     </ul>
                     <p><a href="${env.BUILD_URL}">View Build Details</a></p>
                 """,
-                to: "${EMAIL_OZZY}",
+                to: "${TEAM_EMAIL}",
                 mimeType: 'text/html'
             )
         }
