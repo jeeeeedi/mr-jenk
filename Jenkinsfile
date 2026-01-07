@@ -6,22 +6,47 @@ pipeline {
     }
 
     environment {
-        MAVEN_HOME = '/opt/apache-maven-3.9.9'
-        NODEJS_HOME = '/usr/bin'
-        PATH = "${MAVEN_HOME}/bin:${NODEJS_HOME}:${env.PATH}"
-
         TEAM_EMAIL = 'othmane.afilali@gritlab.ax,jedi.reston@gritlab.ax'
         EMAIL_JEDI = 'jedi.reston@gritlab.ax'
         EMAIL_OZZY = 'othmane.afilali@gritlab.ax'
-
-        // Chrome for Angular tests
-        CHROME_BIN = '/usr/bin/google-chrome'
         
         // Local deployment flag
         DEPLOY_TARGET = 'local'
     }
 
     stages {
+        stage('Setup Environment') {
+            steps {
+                script {
+                    // Dynamically detect tool paths
+                    env.MAVEN_HOME = sh(script: 'mvn -v 2>/dev/null | grep "Maven home" | cut -d: -f2 | xargs || echo "/opt/homebrew/Cellar/maven/3.9.11/libexec"', returnStdout: true).trim()
+                    env.JAVA_HOME = sh(script: 'java -XshowSettings:properties -version 2>&1 | grep "java.home" | cut -d= -f2 | xargs || echo ""', returnStdout: true).trim()
+                    env.NODE_PATH = sh(script: 'which node | xargs dirname || echo "/opt/homebrew/bin"', returnStdout: true).trim()
+                    env.CHROME_BIN = sh(script: '''
+                        if [ -f "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" ]; then
+                            echo "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+                        elif [ -f "/usr/bin/google-chrome" ]; then
+                            echo "/usr/bin/google-chrome"
+                        elif [ -f "/usr/bin/chromium-browser" ]; then
+                            echo "/usr/bin/chromium-browser"
+                        else
+                            echo "chrome"
+                        fi
+                    ''', returnStdout: true).trim()
+                    
+                    // Update PATH
+                    env.PATH = "${env.MAVEN_HOME}/bin:${env.NODE_PATH}:/opt/homebrew/bin:/usr/local/bin:${env.PATH}"
+                    
+                    echo "=== Detected Environment ==="
+                    echo "MAVEN_HOME: ${env.MAVEN_HOME}"
+                    echo "JAVA_HOME: ${env.JAVA_HOME}"
+                    echo "NODE_PATH: ${env.NODE_PATH}"
+                    echo "CHROME_BIN: ${env.CHROME_BIN}"
+                    echo "============================"
+                }
+            }
+        }
+        
         stage('Checkout') {
             steps {
                 checkout scm
