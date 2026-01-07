@@ -6,7 +6,7 @@ pipeline {
     }
 
 environment {
-    MAVEN_HOME = tool 'Maven'
+    MAVEN_HOME = '/opt/apache-maven-3.9.9'
     NODEJS_HOME = '/usr/bin'   // Node.js binaries
     PATH = "${MAVEN_HOME}/bin:${NODEJS_HOME}:${env.PATH}"
 
