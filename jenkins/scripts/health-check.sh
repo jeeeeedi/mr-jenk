@@ -33,10 +33,18 @@ check_service() {
 echo "Running health checks..."
 echo "Waiting for services to initialize (up to 2 minutes)..."
 
+# Determine host to check (for Docker environments)
+if [ -n "$DOCKER_HOST" ] || [ -f /.dockerenv ]; then
+    # Running inside container, check host machine
+    HOST="host.docker.internal"
+else
+    HOST="localhost"
+fi
+
 # Check each service
-check_service "Service Registry" "http://localhost:8761" || HEALTH_CHECK_FAILED=1
-check_service "API Gateway" "http://localhost:8080/actuator/health" || HEALTH_CHECK_FAILED=1
-check_service "Frontend" "http://localhost:4200" || HEALTH_CHECK_FAILED=1
+check_service "Service Registry" "http://${HOST}:8761" || HEALTH_CHECK_FAILED=1
+check_service "API Gateway" "http://${HOST}:8080/actuator/health" || HEALTH_CHECK_FAILED=1
+check_service "Frontend" "http://${HOST}:4200" || HEALTH_CHECK_FAILED=1
 
 if [ $HEALTH_CHECK_FAILED -eq 1 ]; then
     echo "❌ Health checks failed!"
