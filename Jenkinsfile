@@ -24,31 +24,11 @@ pipeline {
     agent any
     
     triggers {
-        pollSCM('* * * * *')  // Poll every minute for changes
+        githubPush()  // Trigger builds on GitHub push events via webhook
         
-        // TODO: Setup webhook for instant builds (instead of polling)
-        // ===== STEP 1: Install & Configure ngrok =====
-        // 1. Install ngrok: brew install ngrok
-        // 2. Sign up: https://dashboard.ngrok.com/signup
-        // 3. Get authtoken from: https://dashboard.ngrok.com/get-started/your-authtoken
-        // 4. Install token: ngrok config add-authtoken YOUR_TOKEN_HERE
-        // 5. Run tunnel: ngrok http 8081
-        // 6. Copy the forwarding URL from output (https://xxx.ngrok.io)
-        //
-        // ===== STEP 2: Add GitHub Webhook =====
-        // 1. Go to your GitHub repo
-        // 2. Settings > Webhooks > Add webhook
-        // 3. Configure:
-        //    - Payload URL: https://xxx.ngrok.io/github-webhook/
-        //    - Content type: application/json
-        //    - Events: Just the push event
-        //    - Active: ✓ Checked
-        // 4. Click "Add webhook"
-        //
-        // ===== STEP 3: Update Jenkinsfile =====
-        // 1. Replace pollSCM() with: githubPush()
-        // 2. Keep ngrok tunnel running in background
-        // 3. Commit and push to test webhook
+        // ===== WEBHOOK SETUP (Already configured!) =====
+        // This pipeline now uses GitHub webhooks for instant builds.
+        // Webhook instructions are at the bottom of this file.
     }
 
     environment {
@@ -277,3 +257,72 @@ def sendEmail(String status) {
         mimeType: 'text/html'
     )
 }
+
+// =============================================================================
+// GITHUB WEBHOOK SETUP INSTRUCTIONS
+// =============================================================================
+//
+// Follow these steps to enable instant builds on git push (instead of polling):
+//
+// 1. INSTALL NGROK (if not already installed)
+//    macOS:  brew install ngrok
+//    Linux:  Download from https://ngrok.com/download
+//
+// 2. CREATE NGROK ACCOUNT & GET AUTH TOKEN
+//    - Sign up: https://dashboard.ngrok.com/signup
+//    - Get token: https://dashboard.ngrok.com/get-started/your-authtoken
+//    - Configure: ngrok config add-authtoken YOUR_TOKEN_HERE
+//
+// 3. START NGROK TUNNEL
+//    Run: ngrok http 8080
+//    (Replace 8080 with your Jenkins port if different)
+//    
+//    You'll see output like:
+//    Forwarding    https://abc123.ngrok.io -> http://localhost:8080
+//                  ^^^^^^^^^^^^^^^^^^^^^^^^
+//                  Copy this HTTPS URL!
+//
+// 4. CONFIGURE GITHUB WEBHOOK
+//    a. Go to your GitHub repository
+//    b. Click: Settings → Webhooks → Add webhook
+//    c. Fill in:
+//       Payload URL:    https://abc123.ngrok.io/github-webhook/
+//                       (Use YOUR ngrok URL + /github-webhook/)
+//       Content type:   application/json
+//       Secret:         (leave empty)
+//       SSL:            Enable SSL verification
+//       Events:         ☑ Just the push event
+//       Active:         ☑ Checked
+//    d. Click "Add webhook"
+//
+// 5. VERIFY WEBHOOK
+//    - GitHub will send a test ping
+//    - Check webhook settings - you should see a green checkmark
+//    - If it fails, verify ngrok is running and URL is correct
+//
+// 6. KEEP NGROK RUNNING
+//    Option A: Run in foreground (simple, but stops when terminal closes)
+//              ngrok http 8080
+//    
+//    Option B: Run in background (survives terminal close)
+//              nohup ngrok http 8080 > /tmp/ngrok.log 2>&1 &
+//              tail -f /tmp/ngrok.log  # to view the URL
+//    
+//    Option C: Use screen/tmux (best for long-running)
+//              screen -S ngrok
+//              ngrok http 8080
+//              Ctrl+A, then D  # detach
+//              screen -r ngrok # reattach later
+//
+// 7. TEST IT!
+//    - Make a change to your code
+//    - Git commit and push
+//    - Jenkins should trigger a build automatically!
+//    - Check Jenkins console for "Started by GitHub push"
+//
+// TROUBLESHOOTING:
+// - Webhook shows red X: Check ngrok is running, URL is correct
+// - Build not triggering: Check Jenkins logs for webhook events
+// - ngrok URL changed: Update GitHub webhook URL (free tier gets new URL on restart)
+//
+// =============================================================================

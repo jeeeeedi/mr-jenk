@@ -2,22 +2,22 @@
 
 A production-ready, full-stack microservices-based e-commerce platform built with **Spring Boot** and **Angular**, featuring event-driven architecture with **Apache Kafka**, service discovery, and containerized deployment.
 
-## 🚀 Live Deployment Status
+## 🚀 Local Deployment Status
 
 **Current Version**: Build #28 ✅  
 **Deployment Date**: January 7, 2026  
 **Status**: All services healthy and running
 
-- **Frontend**: http://16.170.204.134:4200
-- **API Gateway**: http://16.170.204.134:8080
-- **Service Registry**: http://16.170.204.134:8761
-- **Jenkins CI/CD**: http://13.60.233.212:8080
+- **Frontend**: http://localhost:4200
+- **API Gateway**: http://localhost:8080
+- **Service Registry**: http://localhost:8761
+- **Jenkins CI/CD**: http://localhost:8080
 
-### Infrastructure Upgrades
+### Infrastructure Setup
 
-- ✅ **15GB disk space** on both Jenkins and deployment servers (upgraded from 8GB)
-- ✅ **Aggressive cleanup**: 30min Jenkins, 1h AWS, builder cache + volumes
-- ✅ **68% disk usage** on AWS (was 94%) - 9.2GB free space
+- ✅ **Local Docker deployment** with docker-compose
+- ✅ **Automated cleanup**: 30min for old images, builder cache + volumes
+- ✅ **GitHub webhook integration** via ngrok for instant builds
 
 ### CI/CD Pipeline
 
@@ -41,9 +41,8 @@ This project implements a modern microservices architecture with the following c
 
 ### Frontend
 
-- **Angular 20** (Ports 4201) - Modern SPA with Angular Material Design
-
-  - HTTPS on port 4201 (with self-signed certificates)
+- **Angular 20** (Port 4200) - Modern SPA with Angular Material Design
+  - HTTP on port 4200 for local development
 
 ### Infrastructure
 
