@@ -49,9 +49,24 @@
         </div>
         
         <div class="section">
-            <p><span class="section-title">📊 Test Results</span></p>
-            <p>All tests passed successfully!</p>
-            <p><a href="${BUILD_URL}testReport/">View Detailed Test Report</a></p>
+            <p><span class="section-title">📊 Test Results & Coverage</span></p>
+            <p>All tests passed successfully! Click links to view detailed reports:</p>
+            <table>
+                <tr>
+                    <td><strong>Test Reports:</strong></td>
+                    <td>
+                        <a href="${BUILD_URL}Backend_20Test_20Report/">📊 Backend Tests</a> | 
+                        <a href="${BUILD_URL}Frontend_20Test_20Report/">🧪 Frontend Tests</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Coverage Reports:</strong></td>
+                    <td>
+                        <a href="${BUILD_URL}Backend_20Coverage_20Report/">📊 Backend Coverage</a> | 
+                        <a href="${BUILD_URL}Frontend_20Coverage_20Report/">📈 Frontend Coverage</a>
+                    </td>
+                </tr>
+            </table>
         </div>
         
         <div class="section">
