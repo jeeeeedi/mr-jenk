@@ -44,7 +44,7 @@ docker-compose down
 # Check if previous backup exists
 BACKUP_EXISTS=0
 for service in service-registry api-gateway user-service product-service media-service frontend; do
-    if docker images "buy01-pipeline-\${service}:previous" | grep -q previous; then
+    if docker images "buy01-pipeline-${service}:previous" | grep -q previous; then
         BACKUP_EXISTS=1
         break
     fi
@@ -100,10 +100,10 @@ fi
 # Restore previous working version
 echo "Restoring previous working images..."
 for service in service-registry api-gateway user-service product-service media-service frontend; do
-    if docker images "buy01-pipeline-\${service}:previous" | grep -q previous; then
-        echo "  ✓ Restoring \${service} from backup..."
+    if docker images "buy01-pipeline-${service}:previous" | grep -q previous; then
+        echo "  ✓ Restoring ${service} from backup..."
         # Tag previous as latest to restore
-        docker tag "buy01-pipeline-\${service}:previous" "buy01-pipeline-\${service}:latest"
+        docker tag "buy01-pipeline-${service}:previous" "buy01-pipeline-${service}:latest"
     fi
 done
 
