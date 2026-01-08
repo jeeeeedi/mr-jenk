@@ -211,11 +211,11 @@ def deployToLocal() {
         
         # Stop existing containers
         echo "Stopping existing containers..."
-        docker-compose -f docker-compose-local.yml down --remove-orphans || true
+        docker compose -f docker-compose-local.yml down --remove-orphans || true
         
         # Start containers
         echo "Starting containers..."
-        docker-compose -f docker-compose-local.yml up -d
+        docker compose -f docker-compose-local.yml up -d
         
         # Run health checks
         ./jenkins/scripts/health-check.sh || {

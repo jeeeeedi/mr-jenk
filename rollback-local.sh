@@ -52,8 +52,8 @@ echo ""
 
 # Restart containers with rolled-back images
 echo -e "${YELLOW}[3/4] Restarting containers with previous version...${NC}"
-docker-compose down --remove-orphans 2>/dev/null || true
-docker-compose up -d
+docker compose down --remove-orphans 2>/dev/null || true
+docker compose up -d
 echo -e "${GREEN}✓ Containers restarted${NC}"
 echo ""
 
@@ -120,6 +120,6 @@ echo -e "   API Gateway:      http://localhost:8080"
 echo -e "   Service Registry: http://localhost:8761"
 echo ""
 
-docker-compose ps
+docker compose ps
 
 exit 0

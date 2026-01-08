@@ -165,10 +165,10 @@ if [ $HEALTH_CHECK_FAILED -eq 1 ]; then
     echo -e "${YELLOW}Checking container logs for troubleshooting...${NC}"
     echo ""
     echo "Service Registry logs:"
-    docker-compose logs --tail=10 service-registry
+    docker compose logs --tail=10 service-registry
     echo ""
     echo "API Gateway logs:"
-    docker-compose logs --tail=10 api-gateway
+    docker compose logs --tail=10 api-gateway
     exit 1
 fi
 
@@ -194,13 +194,13 @@ echo -e "${BLUE}📦 Deployed version: build-${BUILD_NUMBER}${NC}"
 echo -e "${YELLOW}💡 Previous version backed up for rollback${NC}"
 echo ""
 echo -e "${BLUE}Useful commands:${NC}"
-echo -e "   View logs:     docker-compose logs -f [service-name]"
-echo -e "   Stop all:      docker-compose down"
+echo -e "   View logs:     docker compose logs -f [service-name]"
+echo -e "   Stop all:      docker compose down"
 echo -e "   Rollback:      ./rollback-local.sh"
 echo ""
 
 # Show running containers
 echo -e "${BLUE}Running containers:${NC}"
-docker-compose ps
+docker compose ps
 
 exit 0
