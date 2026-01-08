@@ -75,11 +75,12 @@ ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "$DEPLOY_HOST" bash <<TAGLATEST
     echo "Backing up current latest images as previous..."
     for service in service-registry api-gateway user-service product-service media-service frontend; do
         # First, backup current latest as previous (if it exists)
-        if docker images | grep -q "buy01-pipeline-\${service}:latest"; then
-            docker tag buy01-pipeline-\${service}:latest buy01-pipeline-\${service}:previous || true
+        if docker images "buy01-pipeline-\${service}:latest" | grep -q latest; then
+            docker tag "buy01-pipeline-\${service}:latest" "buy01-pipeline-\${service}:previous" || true
+            echo "  ✓ \${service}: backed up latest → previous"
         fi
         # Then tag new build as latest
-        docker tag buy01-pipeline-\${service}:build-${BUILD_NUMBER} buy01-pipeline-\${service}:latest
+        docker tag "buy01-pipeline-\${service}:build-${BUILD_NUMBER}" "buy01-pipeline-\${service}:latest"
     done
     echo "✓ New images tagged as latest, old latest backed up as previous"
 TAGLATEST
