@@ -103,7 +103,7 @@ pipeline {
             steps {
                 echo 'Running frontend tests...'
                 dir('buy-01-ui') {
-                    sh 'npm test -- --watch=false --browsers=ChromeHeadless'
+                    sh 'npm test -- --watch=false --browsers=ChromeHeadlessCI'
                 }
             }
         }
