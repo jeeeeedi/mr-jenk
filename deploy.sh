@@ -51,6 +51,15 @@ echo ""
 echo -e "${YELLOW}[2/6] Preparing AWS deployment directory...${NC}"
 ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "$DEPLOY_HOST" "mkdir -p $DEPLOY_PATH"
 
+# Backup current docker-compose.yml BEFORE transferring new one
+ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "$DEPLOY_HOST" bash <<'BACKUP_FIRST'
+    cd /home/ec2-user/buy-01-app
+    if [ -f docker-compose.yml ]; then
+        cp docker-compose.yml docker-compose.yml.previous
+        echo "✓ Backed up current docker-compose.yml"
+    fi
+BACKUP_FIRST
+
 scp -i "$SSH_KEY" -o StrictHostKeyChecking=no docker-compose.yml "$DEPLOY_HOST:$DEPLOY_PATH/"
 echo -e "${GREEN}✓ AWS directory prepared${NC}"
 echo ""
@@ -90,17 +99,7 @@ echo ""
 
 # Transfer docker-compose.yml
 echo -e "${YELLOW}[4/6] Verifying docker-compose.yml...${NC}"
-
-# Backup current docker-compose.yml on server before transferring new one
-ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "$DEPLOY_HOST" << 'BACKUP_COMPOSE'
-    cd /home/ec2-user/buy-01-app
-    if [ -f docker-compose.yml ]; then
-        cp docker-compose.yml docker-compose.yml.previous
-        echo "✓ Backed up docker-compose.yml"
-    fi
-BACKUP_COMPOSE
-
-echo -e "${GREEN}✓ docker-compose.yml already transferred${NC}"
+echo -e "${GREEN}✓ docker-compose.yml already transferred and backed up${NC}"
 echo ""
 
 # 5. Deploy on AWS instance
