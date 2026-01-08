@@ -34,7 +34,7 @@ pipeline {
     environment {
         TEAM_EMAIL     = 'othmane.afilali@gritlab.ax,jedi.reston@gritlab.ax'
         DEPLOY_TARGET  = 'local'
-        CHROME_BIN     = '/usr/bin/chromium'
+        // CHROME_BIN is dynamically detected in detectEnvironment() function
     }
 
     stages {
@@ -171,8 +171,10 @@ def detectEnvironment() {
             echo "/usr/bin/google-chrome"
         elif [ -f "/usr/bin/chromium-browser" ]; then
             echo "/usr/bin/chromium-browser"
+        elif [ -f "/usr/bin/chromium" ]; then
+            echo "/usr/bin/chromium"
         else
-            echo "chrome"
+            echo "google-chrome"
         fi
     ''', returnStdout: true).trim()
     
@@ -275,11 +277,11 @@ def sendEmail(String status) {
 //    - Configure: ngrok config add-authtoken YOUR_TOKEN_HERE
 //
 // 3. START NGROK TUNNEL
-//    Run: ngrok http 8080
-//    (Replace 8080 with your Jenkins port if different)
+//    Run: ngrok http 8081
+//    (Replace 8081 with your Jenkins port if different)
 //    
 //    You'll see output like:
-//    Forwarding    https://abc123.ngrok.io -> http://localhost:8080
+//    Forwarding    https://abc123.ngrok.io -> http://localhost:8081
 //                  ^^^^^^^^^^^^^^^^^^^^^^^^
 //                  Copy this HTTPS URL!
 //
@@ -303,15 +305,15 @@ def sendEmail(String status) {
 //
 // 6. KEEP NGROK RUNNING
 //    Option A: Run in foreground (simple, but stops when terminal closes)
-//              ngrok http 8080
+//              ngrok http 8081
 //    
 //    Option B: Run in background (survives terminal close)
-//              nohup ngrok http 8080 > /tmp/ngrok.log 2>&1 &
+//              nohup ngrok http 8081 > /tmp/ngrok.log 2>&1 &
 //              tail -f /tmp/ngrok.log  # to view the URL
 //    
 //    Option C: Use screen/tmux (best for long-running)
 //              screen -S ngrok
-//              ngrok http 8080
+//              ngrok http 8081
 //              Ctrl+A, then D  # detach
 //              screen -r ngrok # reattach later
 //
