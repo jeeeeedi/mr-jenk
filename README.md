@@ -755,3 +755,4 @@ This project is developed for educational purposes as part of a university proje
 _For questions or issues, please open an issue on GitHub._
 
 # Webhook test
+# Test deployment with Compose plugin
