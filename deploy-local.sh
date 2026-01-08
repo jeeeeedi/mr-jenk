@@ -84,13 +84,15 @@ echo ""
 
 # 4. Stop existing containers
 echo -e "${YELLOW}[4/6] Stopping existing containers...${NC}"
-docker-compose down --remove-orphans 2>/dev/null || true
+# Remove all buy-01 containers regardless of compose project
+docker ps -a --filter "name=buy-01" --format "{{.Names}}" | xargs -r docker rm -f 2>/dev/null || true
+docker compose -f docker-compose-local.yml down --remove-orphans 2>/dev/null || true
 echo -e "${GREEN}✓ Existing containers stopped${NC}"
 echo ""
 
 # 5. Start new containers
 echo -e "${YELLOW}[5/6] Starting containers with Docker Compose...${NC}"
-docker-compose up -d
+docker compose -f docker-compose-local.yml up -d
 
 echo -e "${GREEN}✓ Containers started${NC}"
 echo ""
