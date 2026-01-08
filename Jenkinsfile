@@ -34,6 +34,7 @@ pipeline {
     environment {
         TEAM_EMAIL     = 'othmane.afilali@gritlab.ax,jedi.reston@gritlab.ax'
         DEPLOY_TARGET  = 'local'
+        CHROME_BIN     = '/usr/bin/chromium'
     }
 
     stages {
