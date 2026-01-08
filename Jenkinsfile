@@ -24,7 +24,7 @@ pipeline {
         TEAM_EMAIL = 'othmane.afilali@gritlab.ax,jedi.reston@gritlab.ax'
         
         // Frontend Configuration
-        CHROME_BIN = '/usr/bin/google-chrome'
+        CHROME_BIN = '/usr/bin/chromium-browser'
         
         // Docker Configuration
         DOCKER_IMAGE_PREFIX = 'buy01-pipeline'
@@ -267,7 +267,7 @@ pipeline {
                 subject: "✅ BUILD SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                 body: readFile("${JENKINS_SCRIPTS}/email-success.html"),
                 to: "${TEAM_EMAIL}",
-                recipientProviders: [brokenBuildSuspects(), requestor()],
+                recipientProviders: [developers(), requestor()],
                 mimeType: 'text/html'
             )
         }
@@ -281,7 +281,7 @@ pipeline {
                 subject: "❌ BUILD FAILED: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                 body: readFile("${JENKINS_SCRIPTS}/email-failure.html"),
                 to: "${env.TEAM_EMAIL}",
-                recipientProviders: [brokenBuildSuspects(), requestor(), developers()],
+                recipientProviders: [developers(), requestor()],
                 mimeType: 'text/html'
             )
         }
