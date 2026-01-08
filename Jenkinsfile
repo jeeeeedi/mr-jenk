@@ -46,8 +46,15 @@ pipeline {
         NODEJS_HOME = '/usr/bin'
         PATH = "${MAVEN_HOME}/bin:${NODEJS_HOME}:${env.PATH}"
         
-        // Email Configuration
-        TEAM_EMAIL = 'othmane.afilali@gritlab.ax,jedi.reston@gritlab.ax'
+        // Email Configuration - Use credentials for sensitive data
+        TEAM_EMAIL = credentials('team-email')  // Store in Jenkins Credentials
+        
+        // AWS Configuration - Use credentials for sensitive data
+        AWS_DEPLOY_HOST = credentials('aws-deploy-host')  // Store in Jenkins Credentials
+        AWS_SSH_KEY = credentials('aws-ssh-key-file')  // Store SSH key as secret file
+        
+        // MongoDB Credentials - Use credentials for sensitive data
+        MONGO_ROOT_PASSWORD = credentials('mongo-root-password')  // Store in Jenkins Credentials
         
         // Docker Configuration
         DOCKER_IMAGE_PREFIX = 'buy01-pipeline'

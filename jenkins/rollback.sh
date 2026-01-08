@@ -1,21 +1,30 @@
 #!/bin/bash
 set -e
 
-# AWS Deployment Configuration
-DEPLOY_HOST="ec2-user@13.61.234.232"
-DEPLOY_PATH="/home/ec2-user/buy-01-app"
-
-# Find SSH key
-if [ -f "/var/lib/jenkins/.ssh/aws-deploy-key.pem" ]; then
-    SSH_KEY="/var/lib/jenkins/.ssh/aws-deploy-key.pem"
-elif [ -f "$HOME/Downloads/lastreal.pem" ]; then
-    SSH_KEY="$HOME/Downloads/lastreal.pem"
-else
-    echo "Error: SSH key not found!"
-    exit 1
+# Load configuration from environment or config file
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -f "$SCRIPT_DIR/config-loader.sh" ]; then
+    source "$SCRIPT_DIR/config-loader.sh"
 fi
 
-AWS_PUBLIC_IP="13.61.234.232"
+# AWS Deployment Configuration (from environment or defaults)
+DEPLOY_HOST="${AWS_DEPLOY_USER}@${AWS_DEPLOY_HOST}"
+DEPLOY_PATH="${AWS_DEPLOY_PATH}"
+SSH_KEY="${AWS_SSH_KEY}"
+
+# Legacy fallback for SSH key location
+if [ ! -f "$SSH_KEY" ]; then
+    if [ -f "/var/lib/jenkins/.ssh/aws-deploy-key.pem" ]; then
+        SSH_KEY="/var/lib/jenkins/.ssh/aws-deploy-key.pem"
+    elif [ -f "$HOME/Downloads/lastreal.pem" ]; then
+        SSH_KEY="$HOME/Downloads/lastreal.pem"
+    else
+        echo "Error: SSH key not found!"
+        exit 1
+    fi
+fi
+
+AWS_PUBLIC_IP="${AWS_DEPLOY_HOST}"
 
 # Colors for output
 GREEN='\033[0;32m'

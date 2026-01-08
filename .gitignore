@@ -26,8 +26,21 @@ replay_pid*
 # Environment variable files
 .env
 .env.*
+!.env.example
+!.env.secrets.example
 
-# To load env file it manually: `export $(cat .env | xargs)`
+# SSH Keys and Certificates
+*.pem
+*.key
+*.pub
+certs/
+
+# Secrets and credentials
+secrets/
+.secrets
+*.secret
+
+# To load env file manually: `export $(cat .env | xargs)`
 
 # Maven build output
 target/
