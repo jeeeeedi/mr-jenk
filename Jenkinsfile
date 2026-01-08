@@ -64,7 +64,7 @@ pipeline {
         stage('Build Backend') {
             steps {
                 echo 'Building backend services...'
-                sh 'mvn clean install -DskipTests'
+                sh './mvnw clean install -DskipTests'
             }
         }
         
@@ -74,7 +74,7 @@ pipeline {
         stage('Test Backend') {
             steps {
                 echo 'Running JUnit tests...'
-                sh 'mvn test'
+                sh './mvnw test'
             }
             post {
                 always {
