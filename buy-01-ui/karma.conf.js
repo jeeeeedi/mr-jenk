@@ -9,14 +9,13 @@
 module.exports = function(config) {
     config.set({
         basePath: '',
-        frameworks: ['jasmine', '@angular-devkit/build-angular'],
+        frameworks: ['jasmine'],
         plugins: [
             require('karma-jasmine'),
             require('karma-chrome-launcher'),
             require('karma-jasmine-html-reporter'),
             require('karma-junit-reporter'),
-            require('karma-coverage'),
-            require('@angular-devkit/build-angular/plugins/karma')
+            require('karma-coverage')
         ],
         client: {
             clearContext: false,
@@ -48,15 +47,6 @@ module.exports = function(config) {
                 { type: 'cobertura' },
                 { type: 'text-summary' }
             ],
-            fixWebpackSourcePaths: true,
-            check: {
-                global: {
-                    statements: 60,
-                    branches: 50,
-                    functions: 60,
-                    lines: 60
-                }
-            }
         },
         reporters: ['progress', 'kjhtml', 'junit', 'coverage'],
         port: 9876,

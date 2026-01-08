@@ -156,116 +156,39 @@ pipeline {
     post {
         always {
             echo '=========================================='
-            echo 'Publishing test results and coverage...'
+            echo 'Publishing test results...'
             echo '=========================================='
             
-            // ===== TEST RESULTS =====
-            // Backend JUnit reports from Maven Surefire
+            // Parse backend JUnit reports
             junit(
-                testResults: '''
-                    api-gateway/target/surefire-reports/*.xml,
-                    user-service/target/surefire-reports/*.xml,
-                    product-service/target/surefire-reports/*.xml,
-                    media-service/target/surefire-reports/*.xml,
-                    service-registry/target/surefire-reports/*.xml
-                ''',
-                allowEmptyResults: true,
-                healthScaleFactor: 1.0
+                testResults: '**/target/surefire-reports/*.xml',
+                allowEmptyResults: true
             )
             
-            // Frontend JUnit reports from Karma
-            junit(
-                testResults: 'buy-01-ui/target/surefire-reports/*.xml',
-                allowEmptyResults: true,
-                healthScaleFactor: 1.0
-            )
-            
-            // ===== ARTIFACTS =====
-            // Archive all test reports for historical reference
+            // Archive test reports
             archiveArtifacts(
-                artifacts: '''
-                    **/target/surefire-reports/**/*.xml,
-                    buy-01-ui/target/surefire-reports/**/*
-                ''',
+                artifacts: '**/target/surefire-reports/**/*.xml',
                 allowEmptyArchive: true,
                 fingerprint: true
             )
             
-            // Archive code coverage reports
+            // Archive coverage reports if they exist
             archiveArtifacts(
-                artifacts: '''
-                    **/target/site/jacoco/**/*,
-                    buy-01-ui/coverage/**/*
-                ''',
+                artifacts: '**/target/site/jacoco/**/*,buy-01-ui/coverage/**/*',
                 allowEmptyArchive: true,
                 fingerprint: true
             )
-            
-            // ===== CODE COVERAGE =====
-            // Backend coverage via JaCoCo
-            jacoco(
-                execFilePattern: '**/target/jacoco.exec',
-                classPattern: '**/target/classes',
-                sourcePattern: '**/src/main/java',
-                exclusionPattern: '**/target/classes/(?!.*(?:Controller|Service|Repository|Config)(?:.*\\.class)?$).*'
-            )
-            
-            // ===== HTML REPORTS =====
-            // Backend test report
-            publishHTML([
-                allowMissing: true,
-                alwaysLinkToLastBuild: true,
-                keepAll: true,
-                reportDir: 'target/site/surefire-report',
-                reportFiles: 'index.html',
-                reportName: '📊 Backend Test Report',
-                includes: '**/*'
-            ])
-            
-            // Frontend test report
-            publishHTML([
-                allowMissing: true,
-                alwaysLinkToLastBuild: true,
-                keepAll: true,
-                reportDir: 'buy-01-ui/target/surefire-reports',
-                reportFiles: 'index.html',
-                reportName: '🧪 Frontend Test Report',
-                includes: '**/*'
-            ])
-            
-            // Frontend coverage report
-            publishHTML([
-                allowMissing: true,
-                alwaysLinkToLastBuild: true,
-                keepAll: true,
-                reportDir: 'buy-01-ui/coverage',
-                reportFiles: 'index.html',
-                reportName: '📈 Frontend Coverage Report',
-                includes: '**/*'
-            ])
-            
-            // Backend coverage report
-            publishHTML([
-                allowMissing: true,
-                alwaysLinkToLastBuild: true,
-                keepAll: true,
-                reportDir: 'target/site/jacoco',
-                reportFiles: 'index.html',
-                reportName: '📊 Backend Coverage Report',
-                includes: '**/*'
-            ])
         }
         success {
             echo '=========================================='
             echo '✅ Pipeline completed successfully!'
             echo '=========================================='
             
-            // Send success email to team
             emailext(
                 subject: "✅ BUILD SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                 body: readFile("${JENKINS_SCRIPTS}/email-success.html"),
                 to: "${TEAM_EMAIL}",
-                recipientProviders: [developers(), requestor()],
+                recipientProviders: [requestor()],
                 mimeType: 'text/html'
             )
         }
@@ -274,12 +197,11 @@ pipeline {
             echo '❌ Pipeline failed! Immediate action required'
             echo '=========================================='
             
-            // Send failure email
             emailext(
                 subject: "❌ BUILD FAILED: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                 body: readFile("${JENKINS_SCRIPTS}/email-failure.html"),
                 to: "${env.TEAM_EMAIL}",
-                recipientProviders: [developers(), requestor()],
+                recipientProviders: [requestor()],
                 mimeType: 'text/html'
             )
         }
