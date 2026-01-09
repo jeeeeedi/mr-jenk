@@ -27,6 +27,9 @@ if [ ! -f "$SSH_KEY" ]; then
     exit 1
 fi
 
+# Ensure proper SSH key permissions (required by SSH)
+chmod 600 "$SSH_KEY" 2>/dev/null || true
+
 AWS_PUBLIC_IP="${AWS_DEPLOY_HOST}"
 
 # Colors for output
