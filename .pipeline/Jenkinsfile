@@ -203,6 +203,9 @@ pipeline {
                     // Use withCredentials to properly bind the SSH key file
                     withCredentials([file(credentialsId: 'aws-ssh-key-file', variable: 'AWS_SSH_KEY_FILE')]) {
                         try {
+                            echo '=========================================='
+                            echo '🚀 Deploying to AWS...'
+                            echo '=========================================='
                             sh '''
                                 export AWS_SSH_KEY="${AWS_SSH_KEY_FILE}"
                                 chmod 600 "${AWS_SSH_KEY}"
@@ -222,11 +225,18 @@ pipeline {
                     
                     // If AWS deployment fails, pipeline fails (no local fallback on Jenkins server)
                     if (!awsDeploymentSuccessful) {
-                        echo "❌ AWS Deployment REQUIRED but failed!"
-                        echo "Please check: (1) Jenkins credentials configured (2) AWS EC2 accessible (3) SSH key permissions"
+                        echo '=========================================='
+                        echo '❌ AWS Deployment REQUIRED but failed!'
+                        echo '=========================================='
+                        echo 'Please check:'
+                        echo '  1. All 5 Jenkins credentials are configured'
+                        echo '  2. AWS EC2 server is accessible'
+                        echo '  3. SSH key has correct permissions'
+                        echo '=========================================='
                         
                         // Attempt rollback
                         try {
+                            echo "Rolling back changes..."
                             sh '${JENKINS_SCRIPTS}/rollback.sh'
                         } catch (Exception rollbackError) {
                             echo "⚠️ Rollback also failed: ${rollbackError.message}"
@@ -241,7 +251,9 @@ pipeline {
 
     post {
         always {
+            echo '=========================================='
             echo 'Publishing test results...'
+            echo '=========================================='
             
             // Parse backend JUnit reports
             junit(
@@ -264,7 +276,9 @@ pipeline {
             )
         }
         success {
+            echo '=========================================='
             echo '✅ Pipeline completed successfully!'
+            echo '=========================================='
             
             script {
                 try {
@@ -288,7 +302,9 @@ pipeline {
             }
         }
         failure {
+            echo '=========================================='
             echo '❌ Pipeline failed! Immediate action required'
+            echo '=========================================='
             
             script {
                 try {
