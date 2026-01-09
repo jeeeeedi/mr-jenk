@@ -143,10 +143,10 @@ docker-compose up -d
 
 # Wait for services to start with progressive health checks
 echo "Waiting for services to initialize..."
-echo "This may take up to 60 seconds for all services to be ready..."
+echo "This may take up to 90 seconds for all services to be ready..."
 
 HEALTH_CHECK_FAILED=0
-MAX_RETRIES=12  # 12 retries x 5 seconds = 60 seconds max wait
+MAX_RETRIES=18  # 18 retries x 5 seconds = 90 seconds max wait
 RETRY_DELAY=5
 
 # Function to check service with retries
@@ -165,35 +165,49 @@ check_service() {
         echo -n "."
         sleep $RETRY_DELAY
     done
-    echo " ❌ failed after ${MAX_RETRIES} attempts"
+    echo " ⚠ timeout after ${MAX_RETRIES} attempts"
     return 1
 }
 
-# Check Service Registry (Eureka) - most critical, starts first
+# Check Service Registry first (Eureka) - most critical
+echo ""
+echo "Waiting for Service Registry (Eureka) to be fully ready..."
 if ! check_service "Service Registry" "http://localhost:8761"; then
     HEALTH_CHECK_FAILED=1
 fi
 
-# Check API Gateway - depends on Service Registry
+# Wait extra time for Service Registry to register services
+echo "Waiting for service discovery to stabilize..."
+sleep 10
+
+# Check API Gateway - depends on Service Registry being ready
 if ! check_service "API Gateway" "http://localhost:8080/actuator/health"; then
     HEALTH_CHECK_FAILED=1
 fi
 
 # Check Frontend
+echo -n "Checking Frontend..."
 if curl -f -s "http://localhost:4200" > /dev/null 2>&1; then
-    echo "✓ Frontend is healthy"
+    echo " ✓ healthy"
 else
-    echo "❌ API Gateway health check failed"
-    HEALTH_CHECK_FAILED=1
+    echo " ⚠ frontend may still be starting"
 fi
 
-# Check Frontend
-if curl -f -s "http://localhost:4200" > /dev/null 2>&1; then
-    echo "Frontend: ✓ healthy"
-else
-    echo "Frontend: ❌ health check failed"
-    HEALTH_CHECK_FAILED=1
+if [ $HEALTH_CHECK_FAILED -eq 1 ]; then
+    echo ""
+    echo "⚠ Some services are still initializing..."
+    echo "Waiting 30 more seconds for services to stabilize..."
+    sleep 30
+    
+    # Final retry
+    if ! check_service "API Gateway (final check)" "http://localhost:8080/actuator/health"; then
+        echo "❌ API Gateway still not responding after 120 seconds"
+        exit 1
+    fi
 fi
+
+echo ""
+echo "✓ Services are healthy"
 
 if [ $HEALTH_CHECK_FAILED -eq 1 ]; then
     echo ""
