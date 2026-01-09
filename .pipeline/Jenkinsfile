@@ -71,7 +71,7 @@ pipeline {
         FRONTEND_IMAGE = 'buy01-pipeline-frontend'
         
         // Paths
-        JENKINS_SCRIPTS = './jenkins'
+        JENKINS_SCRIPTS = './.pipeline/jenkins'
         FRONTEND_DIR = 'buy-01-ui'
     }
 
