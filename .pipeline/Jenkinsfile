@@ -200,8 +200,8 @@ pipeline {
                     // Try AWS deployment first
                     def awsDeploymentSuccessful = false
                     
-                    // Use withCredentials to properly bind the SSH key file
-                    withCredentials([file(credentialsId: 'aws-ssh-key-file', variable: 'AWS_SSH_KEY_FILE')]) {
+                    // Use withCredentials to properly bind the SSH key
+                    withCredentials([sshUserPrivateKey(credentialsId: 'aws-ssh-key-file', keyFileVariable: 'AWS_SSH_KEY_FILE', usernameVariable: 'SSH_USERNAME')]) {
                         try {
                             echo '=========================================='
                             echo '🚀 Deploying to AWS...'
