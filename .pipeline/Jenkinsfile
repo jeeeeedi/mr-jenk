@@ -227,8 +227,7 @@ pipeline {
                                 chmod 600 "${AWS_SSH_KEY}"
                                 
                                 # Ensure remote certs directory exists
-                                ssh -i "${AWS_SSH_KEY}" -o StrictHostKeyChecking=no "${AWS_DEPLOY_USER}@${AWS_DEPLOY_HOST}" "mkdir -p /home/${AWS_DEPLOY_USER}/buy-01-app/certs"
-                                
+                                ssh -i "${AWS_SSH_KEY}" -o StrictHostKeyChecking=no "${AWS_DEPLOY_USER}@${AWS_DEPLOY_HOST}" "sudo mkdir -p /home/${AWS_DEPLOY_USER}/buy-01-app/certs && sudo chown -R ${AWS_DEPLOY_USER} /home/${AWS_DEPLOY_USER}/buy-01-app/certs && sudo chmod 755 /home/${AWS_DEPLOY_USER}/buy-01-app/certs"
                                 # Transfer SSL certificates as expected by Nginx config
                                 scp -i "${AWS_SSH_KEY}" -o StrictHostKeyChecking=no "${SSL_CERT_FILE}" "${AWS_DEPLOY_USER}@${AWS_DEPLOY_HOST}:/home/${AWS_DEPLOY_USER}/buy-01-app/certs/localhost.pem"
                                 scp -i "${AWS_SSH_KEY}" -o StrictHostKeyChecking=no "${SSL_KEY_FILE}" "${AWS_DEPLOY_USER}@${AWS_DEPLOY_HOST}:/home/${AWS_DEPLOY_USER}/buy-01-app/certs/localhost-key.pem"
