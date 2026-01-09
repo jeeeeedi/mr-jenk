@@ -212,11 +212,10 @@ pipeline {
                     def awsDeploymentSuccessful = false
                     
                     // Use withCredentials to properly bind the SSH key and SSL certs
-                    withCredentials([
-                        file(credentialsId: 'lastreal.pem', variable: 'AWS_SSH_KEY_FILE'),
-                        file(credentialsId: 'localhost.pem', variable: 'SSL_CERT_FILE'),
-                        file(credentialsId: 'localhost-key.pem', variable: 'SSL_KEY_FILE')
-                    ]) {
+                   withCredentials([
+                    file(credentialsId: 'aws-ssh-key-file', variable: ''), 
+                    file(credentialsId: 'frontend-ssl-cert', variable: ''), 
+                    file(credentialsId: 'frontend-ssl-key', variable: '')]) {
                         try {
                             echo '=========================================='
                             echo '🚀 Deploying to AWS...'
