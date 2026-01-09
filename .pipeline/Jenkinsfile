@@ -58,8 +58,8 @@ pipeline {
         MONGO_ROOT_USERNAME = credentials('mongo-root-username')  // Store in Jenkins Credentials
         MONGO_ROOT_PASSWORD = credentials('mongo-root-password')  // Store in Jenkins Credentials
         
-        // API Gateway URL
-        // API_GATEWAY_URL = "http://13.61.234.232:8080"
+        // API Gateway URL - REQUIRED for deployment
+        API_GATEWAY_URL = credentials('api-gateway-url')  // Store in Jenkins Credentials
         
         // Docker Configuration
         DOCKER_IMAGE_PREFIX = 'buy01-pipeline'
