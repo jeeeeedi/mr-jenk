@@ -131,10 +131,7 @@ services:
     image: buy01-pipeline-frontend:latest
     container_name: buy-01-frontend
     ports:
-      - "4200:80"   # HTTP (legacy)
-      - "4201:443"  # HTTPS (recommended)
-    volumes:
-      - ./certs:/etc/nginx/certs:ro  # Consistent relative path for local and AWS
+      - "4200:80"   # HTTP
     depends_on:
       - api-gateway
     networks:
