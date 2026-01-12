@@ -37,6 +37,14 @@
 	<properties>
 		<java.version>17</java.version>
 		<maven.compiler.release>17</maven.compiler.release>
+		
+		<!-- SonarQube Configuration -->
+		<sonar.projectKey>safezone-ecommerce</sonar.projectKey>
+		<sonar.projectName>SafeZone E-Commerce Platform</sonar.projectName>
+		<sonar.moduleKey>${project.groupId}:${project.artifactId}</sonar.moduleKey>
+		<sonar.host.url>${env.SONARQUBE_URL}</sonar.host.url>
+		<sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
+		<sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
 	</properties>
 	<!-- Dependencies should be declared in each service module. This root POM is an aggregator so it intentionally does not declare module-specific dependencies. -->
 
@@ -64,6 +72,35 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>3.0.0</version>
+			</plugin>
+
+			<!-- JaCoCo Code Coverage Plugin -->
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>0.8.11</version>
+				<executions>
+					<execution>
+						<id>prepare-agent</id>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>report</id>
+						<phase>test</phase>
+						<goals>
+							<goal>report</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!-- SonarQube Scanner Plugin -->
+			<plugin>
+				<groupId>org.sonarsource.scanner.maven</groupId>
+				<artifactId>sonar-maven-plugin</artifactId>
+				<version>3.10.0.2594</version>
 			</plugin>
 
 			<!-- Compiler plugin left default for modules; remove Lombok annotation-processor config to avoid loading Lombok at compile-time when unused -->
