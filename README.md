@@ -1,4 +1,4 @@
-# mr-jenk
+# mr-jenk: Jenkins CI/CD Pipeline for Buy-01 Platform 🚀
 
 **Production-ready CI/CD pipeline with automated testing, deployment, and zero-downtime rollback capability.**
 
