@@ -1,4 +1,4 @@
-# MR-Jenk: Jenkins CI/CD Pipeline for Buy-01 Platform 🚀
+# mr-jenk: Jenkins CI/CD Pipeline for Buy-01 Platform 🚀
 
 **Production-ready CI/CD pipeline with automated testing, deployment, and zero-downtime rollback capability.**
 
@@ -10,16 +10,7 @@
 
 1. **Jenkins configured** with 6 credentials (see [SECURITY_IMPLEMENTATION_COMPLETE.md](SECURITY_IMPLEMENTATION_COMPLETE.md))
 2. **Push code** → Automatic build & deploy via webhook
-3. **Access app**: http://13.61.234.232:4200
-
-## 📊 Current Status
-
-- ✅ **Build #54**: Deployed successfully
-- ✅ **Audit Score**: 12/12 (100% compliance)
-- ✅ **Security**: All secrets secured in Jenkins Credentials Store
-- ✅ **Rollback**: Build #53 preserved as backup
-
----
+3. **Access app**: https://13.61.234.232:4201
 
 ## 📋 Overview
 
@@ -338,7 +329,7 @@ After starting the application, you can:
 
 1. **Register a new account:**
 
-   - Navigate to http://localhost:4200
+   - Navigate to https://localhost:4201
    - Click "Register" and create an account
    - Choose role: SELLER (to sell products) or CLIENT (to buy products)
 
@@ -757,23 +748,10 @@ lsof -i :8080
 
 **Via Frontend (Recommended):**
 
-1. Navigate to http://localhost:4200
+1. Navigate to https://localhost:4201
 2. Click "Register"
 3. Fill in the form (name, email, password, role)
 4. Choose role: SELLER or CLIENT
-
-**Via API:**
-
-```bash
-curl -X POST http://localhost:8080/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "John Seller",
-    "email": "seller@example.com",
-    "password": "password123",
-    "role": "SELLER"
-  }'
-```
 
 ### User Roles
 
@@ -825,42 +803,6 @@ All API endpoints are accessed through the API Gateway: `http://localhost:8080`
 | GET    | `/api/media/download/{filename}`             | Download file                | No            | Any            |
 | DELETE | `/api/media/{id}`                            | Delete media                 | Yes           | SELLER (owner) |
 | POST   | `/api/media/{mediaId}/associate/{productId}` | Associate media with product | Yes           | SELLER         |
-
-### Request Examples
-
-**Login:**
-
-```bash
-curl -X POST http://localhost:8080/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "seller@example.com",
-    "password": "password123"
-  }'
-```
-
-**Create Product (requires JWT token):**
-
-```bash
-curl -X POST http://localhost:8080/api/products \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
-  -d '{
-    "name": "Product Name",
-    "description": "Product description",
-    "price": 99.99,
-    "category": "Electronics",
-    "stock": 10
-  }'
-```
-
-**Upload Media:**
-
-```bash
-curl -X POST http://localhost:8080/api/media/upload \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
-  -F "file=@/path/to/image.jpg"
-```
 
 ## 🎯 Use Cases
 
@@ -923,11 +865,3 @@ This project is developed for educational purposes as part of a university proje
 
 - [@jeeeeedi](https://github.com/jeeeeedi)
 - [@oafilali](https://github.com/oafilali)
-- [@Anastasia](https://github.com/An1Su)
-- [@SaddamHosyn](https://github.com/SaddamHosyn)
-
----
-
-**Built with ❤️ using Spring Boot, Angular, Kafka, and MongoDB**
-
-_For questions or issues, please open an issue on GitHub._
