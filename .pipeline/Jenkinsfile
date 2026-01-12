@@ -28,10 +28,6 @@ pipeline {
             description: 'Custom Docker tag (leave empty for build number)'
         )
     }
-    
-    triggers {
-        githubPush()  // Trigger on GitHub webhook push
-    }
 
     options {
         // Keep last 30 builds
