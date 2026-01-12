@@ -12,7 +12,7 @@
 2. **Push code** → Automatic build & deploy via webhook
 3. **Access app**: https://13.61.234.232:4201
 
-## 📋 Overview
+## 📋 Overview 
 
 This project sets up a robust **Continuous Integration and Continuous Deployment (CI/CD)** pipeline using **Jenkins** for the e-commerce platform. The pipeline automatically **builds**, **tests**, and **deploys** your application, ensuring consistent and reliable delivery.
 
