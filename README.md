@@ -6,7 +6,7 @@
 ![Security](https://img.shields.io/badge/security-100%25-success)
 ![Tests](https://img.shields.io/badge/tests-passing-success)
 
-## 🎯 Quick Start 
+## 🎯 Quick Start  
 
 1. **Jenkins configured** with 6 credentials (see [SECURITY_IMPLEMENTATION_COMPLETE.md](SECURITY_IMPLEMENTATION_COMPLETE.md))
 2. **Push code** → Automatic build & deploy via webhook
