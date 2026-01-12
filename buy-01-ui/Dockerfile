@@ -21,10 +21,10 @@ FROM nginx:alpine
 # Copy built files from build stage
 COPY --from=build /app/dist/buy-01-ui/browser /usr/share/nginx/html
 
-# Copy nginx configuration (HTTP only, no HTTPS redirect)
-COPY nginx-http.conf /etc/nginx/conf.d/default.conf
+# Copy nginx configuration for HTTPS
+COPY nginx-https.conf /etc/nginx/conf.d/default.conf
 
-# Expose port
-EXPOSE 80
+# Expose ports
+EXPOSE 80 443
 
 CMD ["nginx", "-g", "daemon off;"]

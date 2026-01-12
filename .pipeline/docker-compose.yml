@@ -132,6 +132,9 @@ services:
     container_name: buy-01-frontend
     ports:
       - "4200:80"   # HTTP
+      - "4201:443"  # HTTPS
+    volumes:
+      - ./certs:/etc/nginx/certs:ro
     depends_on:
       - api-gateway
     networks:

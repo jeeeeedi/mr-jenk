@@ -211,17 +211,26 @@ pipeline {
                     // Try AWS deployment first
                     def awsDeploymentSuccessful = false
                     
-                    // Use withCredentials to properly bind the SSH key
+                    // Use withCredentials to properly bind the SSH key and SSL certs
                    withCredentials([
-                    file(credentialsId: 'aws-ssh-key-file', variable: 'AWS_SSH_KEY_FILE')
+                    file(credentialsId: 'aws-ssh-key-file', variable: 'AWS_SSH_KEY_FILE'),
+                    file(credentialsId: 'frontend-ssl-cert', variable: 'SSL_CERT_FILE'),
+                    file(credentialsId: 'frontend-ssl-key', variable: 'SSL_KEY_FILE')
                    ]) {
                         try {
                             echo '=========================================='
                             echo '🚀 Deploying to AWS...'
+                            echo '🚀 Transferring SSL Certificates...'
                             echo '=========================================='
                             sh '''
                                 export AWS_SSH_KEY="${AWS_SSH_KEY_FILE}"
                                 chmod 600 "${AWS_SSH_KEY}"
+                                
+                                # Ensure remote certs directory exists
+                                ssh -i "${AWS_SSH_KEY}" -o StrictHostKeyChecking=no "${AWS_DEPLOY_USER}@${AWS_DEPLOY_HOST}" "sudo mkdir -p /home/${AWS_DEPLOY_USER}/buy-01-app/certs && sudo chown -R ${AWS_DEPLOY_USER}:${AWS_DEPLOY_USER} /home/${AWS_DEPLOY_USER}/buy-01-app && sudo chmod -R 755 /home/${AWS_DEPLOY_USER}/buy-01-app"
+                                # Transfer SSL certificates as expected by Nginx config
+                                scp -i "${AWS_SSH_KEY}" -o StrictHostKeyChecking=no "${SSL_CERT_FILE}" "${AWS_DEPLOY_USER}@${AWS_DEPLOY_HOST}:/home/${AWS_DEPLOY_USER}/buy-01-app/certs/localhost.pem"
+                                scp -i "${AWS_SSH_KEY}" -o StrictHostKeyChecking=no "${SSL_KEY_FILE}" "${AWS_DEPLOY_USER}@${AWS_DEPLOY_HOST}:/home/${AWS_DEPLOY_USER}/buy-01-app/certs/localhost-key.pem"
                                 
                                 ${JENKINS_SCRIPTS}/deploy.sh ${BUILD_NUMBER}
                             '''
