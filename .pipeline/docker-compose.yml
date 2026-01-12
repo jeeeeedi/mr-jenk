@@ -57,8 +57,8 @@ services:
     image: buy01-pipeline-api-gateway:latest
     container_name: buy-01-api-gateway
     ports:
-      - "8080:8080"   # HTTP (always available)
-      - "8443:8443"   # HTTPS (when enabled)
+      - "8080:8080" # HTTP (always available)
+      - "8443:8443" # HTTPS (when enabled)
     volumes:
       - ./certs:/app/certs:ro
     environment:
@@ -139,8 +139,8 @@ services:
     image: buy01-pipeline-frontend:latest
     container_name: buy-01-frontend
     ports:
-      - "4200:80"   # HTTP
-      - "4201:443"  # HTTPS
+      - "4200:80" # HTTP
+      - "4201:443" # HTTPS
     volumes:
       - ./certs:/etc/nginx/certs:ro
     depends_on:
