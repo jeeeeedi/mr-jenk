@@ -16,8 +16,8 @@ public class CorsConfig {
     public CorsWebFilter corsWebFilter() {
         CorsConfiguration corsConfig = new CorsConfiguration();
 
-        // Allow all origins (most permissive for testing)
-        corsConfig.setAllowedOriginPatterns(Collections.singletonList("*"));
+        // Allow only the frontend origin
+        corsConfig.setAllowedOrigins(Arrays.asList("https://13.61.234.232:4201"));
 
         // Allow all HTTP methods
         corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"));
