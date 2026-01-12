@@ -18,7 +18,7 @@ This project sets up a robust **Continuous Integration and Continuous Deployment
 
 **Your role**: DevOps Engineer - Automating the development workflow with a bulletproof CI/CD system.
 
-## ✅ CI/CD Pipeline Features
+## ✅ CI/CD Pipeline Features 
 
 ### Automated Build Triggers
 
