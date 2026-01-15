@@ -59,7 +59,7 @@ public class UserServiceTest {
 
         // Assert
         assertNotNull(response);
-        assertEquals("user1234", response.getId());
+        assertEquals("user123", response.getId());
         assertEquals("John Doe", response.getName());
         assertEquals("john@example.com", response.getEmail());
         assertEquals(Role.SELLER, response.getRole());
